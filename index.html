@@ -1,66 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Gadgets Lab</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: #0b0f1d;
-            color: #fff;
-            font-family: sans-serif;
-        }
-
-        .logo {
-            max-width: 300px;
-            width: 80%;
-            margin-bottom: 2rem;
-        }
-
-        .social-links {
-            display: flex;
-            gap: 1.5rem;
-        }
-
-        .social-links a {
-            color: #fff;
-            text-decoration: none;
-            font-size: 1.2rem;
-            border: 1px solid #fff;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        .social-links a:hover {
-            background-color: #fff;
-            color: #0b0f1d;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Gadgets Lab</title>
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0b0f1d;
+      --primary-color: #4e8df5;
+      --accent-color: #f35e91;
+      --text-color: #e6e8ec;
+      --muted-color: #a3a6ad;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      color: var(--text-color);
+      background: var(--bg-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      text-align: center;
+      max-width: 480px;
+      padding: 2rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .logo {
+      max-width: 200px;
+      margin-bottom: 1.5rem;
+    }
+    h1 {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+    p {
+      margin: 0.5rem 0 2rem;
+      color: var(--muted-color);
+      line-height: 1.5;
+    }
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+    .social-links a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      transition: background 0.3s, transform 0.3s;
+      text-decoration: none;
+      color: var(--text-color);
+      font-size: 1.2rem;
+    }
+    .social-links a:hover {
+      background: var(--primary-color);
+      color: #fff;
+      transform: translateY(-3px);
+    }
+    footer {
+      margin-top: 2rem;
+      font-size: 0.875rem;
+      color: var(--muted-color);
+    }
+  </style>
 </head>
-
-<body background="logo.png">
-    <!-- Logo -->
+<body>
+  <div class="container">
     <img src="logo.png" alt="3D Gadgets Lab Logo" class="logo">
-
-    <!-- Intro / Tagline Placeholder -->
-    <h1>Welcome to 3D Gadgets Lab</h1>
-    <p>Your hub for innovative 3D designs & custom gadgets.</p>
-
-    <!-- Social Media Links -->
+    <h1>3D Gadgets Lab</h1>
+    <p>Your hub for innovative 3D designs and custom gadget solutions.</p>
     <div class="social-links">
-        <a href="#" id="linkedin">LinkedIn</a>
-        <a href="#" id="facebook">Facebook</a>
-        <a href="#" id="instagram">Instagram</a>
+      <a href="#" aria-label="Twitter">🐦</a>
+      <a href="#" aria-label="LinkedIn">🔗</a>
+      <a href="#" aria-label="Facebook">📘</a>
+      <a href="#" aria-label="Instagram">📸</a>
     </div>
+    <footer>&copy; <span id="year"></span> 3D Gadgets Lab. All rights reserved.</footer>
+  </div>
+  <script>
+    // Dynamic year
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
 </body>
-
 </html>
