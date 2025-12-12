@@ -187,7 +187,14 @@ async function loadProducts() {
     }
 
     tbody.innerHTML = products.map(product => {
-      const imageUrl = product.images?.[0] || product.image || 'https://via.placeholder.com/50x50?text=No+Image';
+      // Handle both old format (array of strings) and new format (array of objects)
+      let imageUrl = 'https://via.placeholder.com/50x50?text=No+Image';
+      if (product.images && product.images.length > 0) {
+        const firstImg = product.images[0];
+        imageUrl = typeof firstImg === 'string' ? firstImg : firstImg.url;
+      } else if (product.image) {
+        imageUrl = product.image;
+      }
       const variantCount = product.variants ? Object.keys(product.variants).length : 0;
       
       return `
@@ -636,14 +643,19 @@ productForm.addEventListener('submit', async (e) => {
 
 // Edit product
 window.editProduct = async function(productId) {
+  console.log('Editing product:', productId);
   try {
     const product = await FirebaseService.getProduct(productId);
+    console.log('Product loaded:', product);
     if (product) {
       openProductModal(product);
+    } else {
+      console.error('Product not found:', productId);
+      alert('Product not found.');
     }
   } catch (error) {
     console.error('Error loading product:', error);
-    alert('Failed to load product.');
+    alert('Failed to load product: ' + error.message);
   }
 };
 
