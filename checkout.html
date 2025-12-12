@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Checkout - 3D Gadgets Lab</title>
+  <title>Plaćanje - 3D Gadgets Lab</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="css/styles.css">
@@ -17,12 +17,18 @@
         <span>3D Gadgets Lab</span>
       </a>
       <nav class="nav">
-        <a href="index.html">Home</a>
-        <a href="shop.html">Shop</a>
+        <a href="index.html" data-i18n="nav.home">Početna</a>
+        <a href="shop.html" data-i18n="nav.shop">Prodavnica</a>
         <a href="cart.html" class="cart-icon">
           <i class="fas fa-shopping-cart"></i>
           <span class="cart-count">0</span>
         </a>
+        <div class="lang-switcher-wrapper">
+          <select id="lang-switcher" class="lang-switcher" onchange="Lang.setLanguage(this.value)">
+            <option value="sr">🇷🇸 SR</option>
+            <option value="en">🇬🇧 EN</option>
+          </select>
+        </div>
       </nav>
     </div>
   </header>
@@ -30,19 +36,19 @@
   <!-- Main Content -->
   <main>
     <div class="page-title">
-      <h1>Checkout</h1>
-      <p>Complete your order</p>
+      <h1 data-i18n="checkout.title">Plaćanje</h1>
+      <p>Završite vašu porudžbinu</p>
     </div>
 
     <div class="checkout-container">
       <!-- Empty Cart Redirect -->
       <div id="checkout-empty" class="cart-empty" style="display: none;">
         <i class="fas fa-shopping-cart"></i>
-        <h2>Your cart is empty</h2>
-        <p>Add some items to your cart before checkout.</p>
+        <h2 data-i18n="cart.empty">Vaša korpa je prazna</h2>
+        <p>Dodajte proizvode u korpu pre naručivanja.</p>
         <a href="shop.html" class="btn btn-primary" style="margin-top: 1rem;">
           <i class="fas fa-arrow-left"></i>
-          Go to Shop
+          <span data-i18n="nav.shop">Prodavnica</span>
         </a>
       </div>
 
@@ -50,65 +56,65 @@
       <div id="checkout-content" style="display: none;">
         <!-- Order Summary -->
         <div class="order-summary">
-          <h3><i class="fas fa-receipt"></i> Order Summary</h3>
+          <h3><i class="fas fa-receipt"></i> <span data-i18n="checkout.orderSummary">Pregled porudžbine</span></h3>
           <div id="order-items"></div>
           <div class="order-total">
-            <span>Total:</span>
+            <span data-i18n="cart.total">Ukupno:</span>
             <span id="order-total-price">0 RSD</span>
           </div>
         </div>
 
         <!-- Customer Information Form -->
         <form id="checkout-form" class="checkout-form">
-          <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-user"></i> Your Information</h3>
+          <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-user"></i> <span data-i18n="checkout.customerInfo">Podaci o kupcu</span></h3>
           
           <div class="form-group">
-            <label for="name">Full Name <span class="required">*</span></label>
+            <label for="name"><span data-i18n="checkout.firstName">Ime</span> i <span data-i18n="checkout.lastName">Prezime</span> <span class="required">*</span></label>
             <input type="text" id="name" name="name" class="form-control" required 
-                   placeholder="Enter your full name">
+                   placeholder="Unesite ime i prezime">
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label for="email">Email <span class="required">*</span></label>
+              <label for="email"><span data-i18n="checkout.email">Email adresa</span> <span class="required">*</span></label>
               <input type="email" id="email" name="email" class="form-control" required 
-                     placeholder="your@email.com">
+                     placeholder="vas@email.com">
             </div>
             <div class="form-group">
-              <label for="phone">Phone <span class="required">*</span></label>
+              <label for="phone"><span data-i18n="checkout.phone">Broj telefona</span> <span class="required">*</span></label>
               <input type="tel" id="phone" name="phone" class="form-control" required 
                      placeholder="+381 XX XXX XXXX">
             </div>
           </div>
 
           <div class="form-group">
-            <label for="address">Street Address <span class="required">*</span></label>
+            <label for="address"><span data-i18n="checkout.address">Adresa</span> <span class="required">*</span></label>
             <input type="text" id="address" name="address" class="form-control" required 
-                   placeholder="Street name and number">
+                   placeholder="Ulica i broj">
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label for="city">City <span class="required">*</span></label>
+              <label for="city"><span data-i18n="checkout.city">Grad</span> <span class="required">*</span></label>
               <input type="text" id="city" name="city" class="form-control" required 
-                     placeholder="City">
+                     placeholder="Grad">
             </div>
             <div class="form-group">
-              <label for="zip">ZIP Code</label>
+              <label for="zip"><span data-i18n="checkout.zipCode">Poštanski broj</span></label>
               <input type="text" id="zip" name="zip" class="form-control" 
-                     placeholder="Postal code">
+                     placeholder="Poštanski broj">
             </div>
           </div>
 
           <div class="form-group">
-            <label for="notes">Order Notes</label>
+            <label for="notes"><span data-i18n="checkout.notes">Napomena (opciono)</span></label>
             <textarea id="notes" name="notes" class="form-control" 
-                      placeholder="Any special instructions or notes for your order..."></textarea>
+                      placeholder="Posebne instrukcije za dostavu..."></textarea>
           </div>
 
           <div class="alert alert-warning" style="margin-bottom: 1.5rem;">
             <i class="fas fa-info-circle"></i>
-            <strong>Payment on Delivery:</strong> You will pay when the order is delivered by the carrier.
+            <strong data-i18n="checkout.cashOnDelivery">Plaćanje pouzećem:</strong> <span id="payment-desc">Platićete gotovinom prilikom preuzimanja.</span>
           </div>
 
           <div id="form-error" class="alert alert-error" style="display: none;"></div>
@@ -116,11 +122,11 @@
           <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
             <a href="cart.html" class="btn btn-secondary" style="flex: 1;">
               <i class="fas fa-arrow-left"></i>
-              Back to Cart
+              <span>Nazad u korpu</span>
             </a>
             <button type="submit" class="btn btn-primary" id="submit-btn" style="flex: 1;">
               <i class="fas fa-check"></i>
-              Place Order
+              <span data-i18n="checkout.placeOrder">Poruči</span>
             </button>
           </div>
         </form>
@@ -129,15 +135,15 @@
       <!-- Success State -->
       <div id="checkout-success" class="success-container" style="display: none;">
         <i class="fas fa-check-circle success-icon"></i>
-        <h1>Order Placed Successfully!</h1>
-        <p>Thank you for your order. We've received your request and will contact you shortly to confirm.</p>
+        <h1 data-i18n="checkout.orderSuccess">Porudžbina uspešna!</h1>
+        <p id="success-message">Hvala vam na porudžbini. Primili smo vaš zahtev i uskoro ćemo vas kontaktirati radi potvrde.</p>
         <div class="order-number" id="success-order-number"></div>
         <p style="margin-top: 1rem; font-size: 0.9rem;">
-          You will receive a confirmation email once your order is approved.
+          Dobićete email sa potvrdom kada vaša porudžbina bude odobrena.
         </p>
         <a href="shop.html" class="btn btn-primary" style="margin-top: 2rem;">
           <i class="fas fa-arrow-left"></i>
-          Continue Shopping
+          <span data-i18n="cart.continueShopping">Nastavi kupovinu</span>
         </a>
       </div>
     </div>
@@ -145,7 +151,7 @@
 
   <!-- Footer -->
   <footer class="footer">
-    <p>&copy; 2025 3D Gadgets Lab. All rights reserved.</p>
+    <p>&copy; 2025 3D Gadgets Lab. <span data-i18n="footer.rights">Sva prava zadržana.</span></p>
   </footer>
 
   <!-- Firebase SDKs -->
@@ -160,6 +166,7 @@
   <script src="js/firebase-config.js"></script>
   <script src="js/cart.js"></script>
   <script src="js/emailjs-config.js"></script>
+  <script src="js/translations.js"></script>
   
   <script>
     const checkoutEmpty = document.getElementById('checkout-empty');
@@ -212,9 +219,11 @@
     function setLoading(loading) {
       submitBtn.disabled = loading;
       if (loading) {
-        submitBtn.innerHTML = '<div class="spinner" style="width: 20px; height: 20px; border-width: 2px;"></div> Processing...';
+        const processingText = Lang.currentLang === 'sr' ? 'Obrada...' : 'Processing...';
+        submitBtn.innerHTML = `<div class="spinner" style="width: 20px; height: 20px; border-width: 2px;"></div> ${processingText}`;
       } else {
-        submitBtn.innerHTML = '<i class="fas fa-check"></i> Place Order';
+        const orderText = Lang.get('checkout.placeOrder');
+        submitBtn.innerHTML = `<i class="fas fa-check"></i> ${orderText}`;
       }
     }
 
@@ -277,7 +286,8 @@
         // Show success
         checkoutContent.style.display = 'none';
         checkoutSuccess.style.display = 'block';
-        successOrderNumber.textContent = `Order Number: ${orderNumber}`;
+        const orderLabel = Lang.currentLang === 'sr' ? 'Broj porudžbine' : 'Order Number';
+        successOrderNumber.textContent = `${orderLabel}: ${orderNumber}`;
 
       } catch (error) {
         console.error('Error placing order:', error);

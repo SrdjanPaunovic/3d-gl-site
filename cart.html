@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cart - 3D Gadgets Lab</title>
+  <title>Korpa - 3D Gadgets Lab</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="css/styles.css">
@@ -17,12 +17,18 @@
         <span>3D Gadgets Lab</span>
       </a>
       <nav class="nav">
-        <a href="index.html">Home</a>
-        <a href="shop.html">Shop</a>
+        <a href="index.html" data-i18n="nav.home">Početna</a>
+        <a href="shop.html" data-i18n="nav.shop">Prodavnica</a>
         <a href="cart.html" class="cart-icon active">
           <i class="fas fa-shopping-cart"></i>
           <span class="cart-count">0</span>
         </a>
+        <div class="lang-switcher-wrapper">
+          <select id="lang-switcher" class="lang-switcher" onchange="Lang.setLanguage(this.value)">
+            <option value="sr">🇷🇸 SR</option>
+            <option value="en">🇬🇧 EN</option>
+          </select>
+        </div>
       </nav>
     </div>
   </header>
@@ -30,19 +36,19 @@
   <!-- Main Content -->
   <main>
     <div class="page-title">
-      <h1>Your Cart</h1>
-      <p>Review your items before checkout</p>
+      <h1 data-i18n="cart.title">Korpa</h1>
+      <p id="cart-subtitle">Pregledajte artikle pre naručivanja</p>
     </div>
 
     <div class="cart-container">
       <!-- Empty Cart State -->
       <div id="cart-empty" class="cart-empty" style="display: none;">
         <i class="fas fa-shopping-cart"></i>
-        <h2>Your cart is empty</h2>
-        <p>Looks like you haven't added any items yet.</p>
+        <h2 data-i18n="cart.empty">Vaša korpa je prazna</h2>
+        <p data-i18n="cart.emptyMessage">Izgleda da još niste dodali proizvode u korpu.</p>
         <a href="shop.html" class="btn btn-primary" style="margin-top: 1rem;">
           <i class="fas fa-arrow-left"></i>
-          Continue Shopping
+          <span data-i18n="cart.continueShopping">Nastavi kupovinu</span>
         </a>
       </div>
 
@@ -53,16 +59,16 @@
         <!-- Cart Summary -->
         <div class="cart-summary">
           <div class="cart-total">
-            <span>Total:</span>
+            <span data-i18n="cart.total">Ukupno:</span>
             <span id="cart-total-price" class="cart-total-price">0 RSD</span>
           </div>
           <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
             <a href="shop.html" class="btn btn-secondary" style="flex: 1;">
               <i class="fas fa-arrow-left"></i>
-              Continue Shopping
+              <span data-i18n="cart.continueShopping">Nastavi kupovinu</span>
             </a>
             <a href="checkout.html" class="btn btn-primary" style="flex: 1;">
-              Proceed to Checkout
+              <span data-i18n="cart.checkout">Nastavi na plaćanje</span>
               <i class="fas fa-arrow-right"></i>
             </a>
           </div>
@@ -73,10 +79,11 @@
 
   <!-- Footer -->
   <footer class="footer">
-    <p>&copy; 2025 3D Gadgets Lab. All rights reserved.</p>
+    <p>&copy; 2025 3D Gadgets Lab. <span data-i18n="footer.rights">Sva prava zadržana.</span></p>
   </footer>
 
   <script src="js/cart.js"></script>
+  <script src="js/translations.js"></script>
   
   <script>
     const cartEmpty = document.getElementById('cart-empty');
@@ -110,7 +117,7 @@
             </button>
           </div>
           <span class="remove-item" data-action="remove">
-            <i class="fas fa-trash"></i> Remove
+            <i class="fas fa-trash"></i> <span class="remove-text">${Lang.get('cart.remove')}</span>
           </span>
         </div>
       `;

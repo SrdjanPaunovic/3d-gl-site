@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -174,21 +174,24 @@
     const titleEl = document.getElementById('title');
     const subEl = document.getElementById('subtitle');
     const shopEl = document.querySelector('[data-i18n="shop"]');
-    // Detect browser language
-    const userLang = navigator.language || navigator.userLanguage;
-    const defaultLang = userLang.startsWith('sr') ? 'sr' : 'en';
+    
+    // Get saved language or default to Serbian
+    const savedLang = localStorage.getItem('lang');
+    const defaultLang = savedLang || 'sr';
+    
     function setLanguage(lang) {
-      const t = translations[lang] || translations.en;
+      const t = translations[lang] || translations.sr;
       titleEl.textContent = t.title;
       subEl.textContent = t.subtitle;
       if (shopEl) shopEl.textContent = t.shop;
       btnEn.classList.toggle('active', lang === 'en');
       btnSr.classList.toggle('active', lang === 'sr');
       document.documentElement.lang = lang;
+      localStorage.setItem('lang', lang);
     }
     btnEn.addEventListener('click', () => setLanguage('en'));
     btnSr.addEventListener('click', () => setLanguage('sr'));
-    // Initialize default based on browser
+    // Initialize with saved or default language
     setLanguage(defaultLang);
     // Dynamic year
     document.getElementById('year').textContent = new Date().getFullYear();
