@@ -25,9 +25,7 @@ const saveProductBtn = document.getElementById('save-product-btn');
 const productIdInput = document.getElementById('product-id');
 const imageUploadArea = document.getElementById('image-upload-area');
 const productImageInput = document.getElementById('product-image-input');
-const imagePreview = document.getElementById('image-preview');
-const previewImg = document.getElementById('preview-img');
-const removeImageBtn = document.getElementById('remove-image');
+const imagesGallery = document.getElementById('images-gallery');
 const variantsEditor = document.getElementById('variants-editor');
 const addVariantTypeBtn = document.getElementById('add-variant-type');
 
@@ -40,8 +38,7 @@ const orderModalFooter = document.getElementById('order-modal-footer');
 const orderFilter = document.getElementById('order-filter');
 
 // State
-let currentImageFile = null;
-let currentImageUrl = null;
+let productImages = []; // Array of { file: File|null, url: string, isMain: boolean, linkedVariants: [{type, value}] }
 let currentOrderId = null;
 
 // ============================================
@@ -222,10 +219,8 @@ async function loadProducts() {
 function openProductModal(product = null) {
   productForm.reset();
   variantsEditor.innerHTML = '';
-  currentImageFile = null;
-  currentImageUrl = null;
-  imagePreview.style.display = 'none';
-  imageUploadArea.style.display = 'block';
+  productImages = [];
+  renderImagesGallery();
 
   if (product) {
     productModalTitle.textContent = 'Edit Product';
@@ -234,20 +229,46 @@ function openProductModal(product = null) {
     document.getElementById('product-price').value = product.price;
     document.getElementById('product-description').value = product.description || '';
 
-    // Load image
-    if (product.images?.[0] || product.image) {
-      currentImageUrl = product.images?.[0] || product.image;
-      previewImg.src = currentImageUrl;
-      imagePreview.style.display = 'inline-block';
-      imageUploadArea.style.display = 'none';
+    // Load images with their variant links
+    if (product.images && product.images.length > 0) {
+      // Check if images is new format (array of objects) or old format (array of strings)
+      product.images.forEach((img, index) => {
+        if (typeof img === 'string') {
+          // Old format - just URL
+          productImages.push({
+            file: null,
+            url: img,
+            isMain: index === 0,
+            linkedVariants: []
+          });
+        } else {
+          // New format - object with url and linkedVariants
+          productImages.push({
+            file: null,
+            url: img.url,
+            isMain: img.isMain || index === 0,
+            linkedVariants: img.linkedVariants || []
+          });
+        }
+      });
+    } else if (product.image) {
+      // Fallback to single image
+      productImages.push({
+        file: null,
+        url: product.image,
+        isMain: true,
+        linkedVariants: []
+      });
     }
 
-    // Load variants
+    // Load variants first so they're available for linking
     if (product.variants) {
       for (const [name, values] of Object.entries(product.variants)) {
         addVariantType(name, values);
       }
     }
+
+    renderImagesGallery();
   } else {
     productModalTitle.textContent = 'Add Product';
     productIdInput.value = '';
@@ -269,7 +290,7 @@ productModal.addEventListener('click', (e) => {
   if (e.target === productModal) closeProductModalFn();
 });
 
-// Image upload
+// Image upload - multiple files
 imageUploadArea.addEventListener('click', () => productImageInput.click());
 
 imageUploadArea.addEventListener('dragover', (e) => {
@@ -284,35 +305,193 @@ imageUploadArea.addEventListener('dragleave', () => {
 imageUploadArea.addEventListener('drop', (e) => {
   e.preventDefault();
   imageUploadArea.style.borderColor = 'var(--border-color)';
-  const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith('image/')) {
-    handleImageFile(file);
-  }
+  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+  handleImageFiles(files);
 });
 
 productImageInput.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (file) handleImageFile(file);
+  const files = Array.from(e.target.files);
+  handleImageFiles(files);
+  productImageInput.value = ''; // Reset to allow re-selecting same files
 });
 
-function handleImageFile(file) {
-  currentImageFile = file;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    previewImg.src = e.target.result;
-    imagePreview.style.display = 'inline-block';
-    imageUploadArea.style.display = 'none';
-  };
-  reader.readAsDataURL(file);
+function handleImageFiles(files) {
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      productImages.push({
+        file: file,
+        url: e.target.result, // Data URL for preview
+        isMain: productImages.length === 0, // First image is main by default
+        linkedVariants: []
+      });
+      renderImagesGallery();
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
-removeImageBtn.addEventListener('click', () => {
-  currentImageFile = null;
-  currentImageUrl = null;
-  previewImg.src = '';
-  imagePreview.style.display = 'none';
-  imageUploadArea.style.display = 'block';
-  productImageInput.value = '';
+// Get current variants from the editor
+function getCurrentVariants() {
+  const variants = {};
+  variantsEditor.querySelectorAll('.variant-type').forEach(variantDiv => {
+    const variantName = variantDiv.querySelector('.variant-type-name').value.trim();
+    if (variantName) {
+      const values = [];
+      variantDiv.querySelectorAll('.variant-value-tag').forEach(tag => {
+        const value = tag.textContent.replace('×', '').trim();
+        if (value) values.push(value);
+      });
+      if (values.length > 0) {
+        variants[variantName] = values;
+      }
+    }
+  });
+  return variants;
+}
+
+// Render images gallery
+function renderImagesGallery() {
+  imagesGallery.innerHTML = '';
+  
+  productImages.forEach((img, index) => {
+    const item = document.createElement('div');
+    item.className = `gallery-item ${img.isMain ? 'is-main' : ''}`;
+    item.dataset.index = index;
+
+    const variants = getCurrentVariants();
+    const variantOptions = [];
+    for (const [type, values] of Object.entries(variants)) {
+      values.forEach(value => {
+        variantOptions.push({ type, value });
+      });
+    }
+
+    const linkedVariantsHTML = img.linkedVariants.map((lv, lvIndex) => `
+      <span class="gallery-item-variant-tag">
+        ${lv.type}: ${lv.value}
+        <span class="remove" data-img-index="${index}" data-lv-index="${lvIndex}">&times;</span>
+      </span>
+    `).join('');
+
+    item.innerHTML = `
+      <img src="${img.url}" alt="Product image ${index + 1}">
+      <div class="gallery-item-actions">
+        ${!img.isMain ? `<button type="button" class="gallery-item-btn set-main" title="Set as main image" data-index="${index}">
+          <i class="fas fa-star"></i>
+        </button>` : ''}
+        <button type="button" class="gallery-item-btn remove" title="Remove image" data-index="${index}">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="gallery-item-info">
+        ${img.isMain ? '<div class="gallery-item-main-badge">Main Image</div>' : ''}
+        <div class="gallery-item-variants">
+          ${linkedVariantsHTML || '<span style="color: var(--muted-color); font-size: 0.65rem;">No variants linked</span>'}
+        </div>
+        ${variantOptions.length > 0 ? `
+          <button type="button" class="link-variant-btn" data-index="${index}">
+            <i class="fas fa-link"></i> Link to variant
+          </button>
+          <div class="variant-link-dropdown" data-index="${index}">
+            <h4>Select variant to link:</h4>
+            ${variantOptions.map(opt => {
+              const isLinked = img.linkedVariants.some(lv => lv.type === opt.type && lv.value === opt.value);
+              return `
+                <label class="variant-link-option">
+                  <input type="checkbox" 
+                         data-img-index="${index}" 
+                         data-type="${opt.type}" 
+                         data-value="${opt.value}"
+                         ${isLinked ? 'checked' : ''}>
+                  ${opt.type}: ${opt.value}
+                </label>
+              `;
+            }).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    imagesGallery.appendChild(item);
+  });
+
+  // Add event listeners
+  imagesGallery.querySelectorAll('.gallery-item-btn.remove').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const index = parseInt(btn.dataset.index);
+      const wasMain = productImages[index].isMain;
+      productImages.splice(index, 1);
+      // If removed image was main, set first image as main
+      if (wasMain && productImages.length > 0) {
+        productImages[0].isMain = true;
+      }
+      renderImagesGallery();
+    });
+  });
+
+  imagesGallery.querySelectorAll('.gallery-item-btn.set-main').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const index = parseInt(btn.dataset.index);
+      productImages.forEach((img, i) => {
+        img.isMain = i === index;
+      });
+      renderImagesGallery();
+    });
+  });
+
+  // Variant linking
+  imagesGallery.querySelectorAll('.link-variant-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const index = btn.dataset.index;
+      const dropdown = imagesGallery.querySelector(`.variant-link-dropdown[data-index="${index}"]`);
+      // Close all other dropdowns
+      imagesGallery.querySelectorAll('.variant-link-dropdown.active').forEach(d => {
+        if (d !== dropdown) d.classList.remove('active');
+      });
+      dropdown.classList.toggle('active');
+    });
+  });
+
+  imagesGallery.querySelectorAll('.variant-link-dropdown input[type="checkbox"]').forEach(checkbox => {
+    checkbox.addEventListener('change', (e) => {
+      const imgIndex = parseInt(checkbox.dataset.imgIndex);
+      const type = checkbox.dataset.type;
+      const value = checkbox.dataset.value;
+      
+      if (checkbox.checked) {
+        // Add link
+        productImages[imgIndex].linkedVariants.push({ type, value });
+      } else {
+        // Remove link
+        productImages[imgIndex].linkedVariants = productImages[imgIndex].linkedVariants.filter(
+          lv => !(lv.type === type && lv.value === value)
+        );
+      }
+      renderImagesGallery();
+    });
+  });
+
+  // Remove variant link
+  imagesGallery.querySelectorAll('.gallery-item-variant-tag .remove').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const imgIndex = parseInt(btn.dataset.imgIndex);
+      const lvIndex = parseInt(btn.dataset.lvIndex);
+      productImages[imgIndex].linkedVariants.splice(lvIndex, 1);
+      renderImagesGallery();
+    });
+  });
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.variant-link-dropdown') && !e.target.closest('.link-variant-btn')) {
+    document.querySelectorAll('.variant-link-dropdown.active').forEach(d => d.classList.remove('active'));
+  }
 });
 
 // Variants
@@ -330,7 +509,7 @@ function addVariantType(name = '', values = []) {
       ${values.map(v => `
         <span class="variant-value-tag">
           ${v}
-          <span class="remove" onclick="this.parentElement.remove()">&times;</span>
+          <span class="remove">&times;</span>
         </span>
       `).join('')}
     </div>
@@ -340,9 +519,18 @@ function addVariantType(name = '', values = []) {
     </div>
   `;
 
-  // Remove variant type
+  // Remove variant type - also refresh gallery to update linking options
   variantDiv.querySelector('.remove-variant-type').addEventListener('click', () => {
     variantDiv.remove();
+    renderImagesGallery();
+  });
+
+  // Remove value tags - refresh gallery
+  variantDiv.querySelectorAll('.variant-value-tag .remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.parentElement.remove();
+      renderImagesGallery();
+    });
   });
 
   // Add value
@@ -354,9 +542,16 @@ function addVariantType(name = '', values = []) {
     if (value) {
       const tag = document.createElement('span');
       tag.className = 'variant-value-tag';
-      tag.innerHTML = `${value}<span class="remove" onclick="this.parentElement.remove()">&times;</span>`;
+      tag.innerHTML = `${value}<span class="remove">&times;</span>`;
+      // Add remove listener for new tag
+      tag.querySelector('.remove').addEventListener('click', () => {
+        tag.remove();
+        renderImagesGallery();
+      });
       variantDiv.querySelector('.variant-values').appendChild(tag);
       valueInput.value = '';
+      // Refresh gallery to show new variant in linking options
+      renderImagesGallery();
     }
   }
 
@@ -387,35 +582,38 @@ productForm.addEventListener('submit', async (e) => {
     const description = document.getElementById('product-description').value.trim();
 
     // Collect variants
-    const variants = {};
-    variantsEditor.querySelectorAll('.variant-type').forEach(variantDiv => {
-      const variantName = variantDiv.querySelector('.variant-type-name').value.trim();
-      if (variantName) {
-        const values = [];
-        variantDiv.querySelectorAll('.variant-value-tag').forEach(tag => {
-          const value = tag.textContent.replace('×', '').trim();
-          if (value) values.push(value);
-        });
-        if (values.length > 0) {
-          variants[variantName] = values;
-        }
-      }
-    });
+    const variants = getCurrentVariants();
 
-    // Upload image if new file selected
-    let imageUrl = currentImageUrl;
-    if (currentImageFile) {
-      const path = `products/${Date.now()}_${currentImageFile.name}`;
-      imageUrl = await FirebaseService.uploadImage(currentImageFile, path);
+    // Upload new images and prepare images array
+    const uploadedImages = [];
+    
+    for (const img of productImages) {
+      let imageUrl = img.url;
+      
+      // If it's a new file (has file property and url is data URL), upload it
+      if (img.file && img.url.startsWith('data:')) {
+        const path = `products/${Date.now()}_${img.file.name}`;
+        imageUrl = await FirebaseService.uploadImage(img.file, path);
+      }
+      
+      uploadedImages.push({
+        url: imageUrl,
+        isMain: img.isMain,
+        linkedVariants: img.linkedVariants
+      });
     }
+
+    // Sort so main image is first
+    uploadedImages.sort((a, b) => (b.isMain ? 1 : 0) - (a.isMain ? 1 : 0));
 
     const productData = {
       name,
       price,
       description,
       variants,
-      images: imageUrl ? [imageUrl] : [],
-      image: imageUrl || ''
+      images: uploadedImages,
+      // Keep legacy 'image' field for backwards compatibility
+      image: uploadedImages.length > 0 ? uploadedImages[0].url : ''
     };
 
     if (productId) {
