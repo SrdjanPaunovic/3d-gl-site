@@ -297,8 +297,73 @@ Your site will be available at `https://your-project.web.app`
 
 ---
 
+## Cloudflare Pages Deployment
+
+### Step 1: Connect Repository
+
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/)
+2. Navigate to **Workers & Pages**
+3. Click **"Create application"** → **"Pages"** → **"Connect to Git"**
+4. Authorize and select your GitHub repository
+5. Click **"Begin setup"**
+
+### Step 2: Configure Build Settings
+
+| Setting | Value |
+|---------|-------|
+| **Project name** | `3d-gadgets-lab` (or your preference) |
+| **Production branch** | `main` |
+| **Build command** | `npm run build` |
+| **Build output directory** | `/` (root) |
+
+### Step 3: Add Environment Variables
+
+Click **"Add variable"** for each of these:
+
+**Firebase Variables:**
+| Variable Name | Value |
+|--------------|-------|
+| `FIREBASE_API_KEY` | `AIzaSyBte_rsRxmsl-dCcV4ERa2vcjt0yL1dIxM` |
+| `FIREBASE_AUTH_DOMAIN` | `dgadgetlab-shop.firebaseapp.com` |
+| `FIREBASE_PROJECT_ID` | `dgadgetlab-shop` |
+| `FIREBASE_STORAGE_BUCKET` | `dgadgetlab-shop.firebasestorage.app` |
+| `FIREBASE_MESSAGING_SENDER_ID` | `307656144120` |
+| `FIREBASE_APP_ID` | `1:307656144120:web:8e1ea7c4d2a73c2baab70d` |
+| `FIREBASE_MEASUREMENT_ID` | `G-N9SXRCGPJ9` |
+
+**EmailJS Variables:**
+| Variable Name | Value |
+|--------------|-------|
+| `EMAILJS_SERVICE_ID` | Your EmailJS service ID |
+| `EMAILJS_TEMPLATE_ID` | Your customer template ID |
+| `EMAILJS_ADMIN_TEMPLATE_ID` | Your admin template ID |
+| `EMAILJS_PUBLIC_KEY` | Your EmailJS public key |
+
+### Step 4: Deploy
+
+1. Click **"Save and Deploy"**
+2. Wait for the build to complete
+3. Your site will be available at `https://your-project.pages.dev`
+
+### Step 5: Add Custom Domain (Optional)
+
+1. In your Pages project, go to **"Custom domains"**
+2. Click **"Set up a custom domain"**
+3. Enter your domain (e.g., `shop.3dgadgetslab.com`)
+4. Follow DNS configuration instructions
+
+### Updating Environment Variables
+
+To update variables after initial setup:
+1. Go to your Pages project → **Settings** → **Environment variables**
+2. Edit the variables as needed
+3. Trigger a new deployment for changes to take effect
+
+---
+
 ## Need Help?
 
 1. Check browser developer console (F12) for errors
 2. Verify all configuration values are correct
 3. Make sure Firebase project has billing enabled for production use (free tier is generous)
+
