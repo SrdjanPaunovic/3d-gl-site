@@ -1,6 +1,6 @@
 // Admin Panel JavaScript
 
-// DOM Elements
+// DOM Elements - using optional chaining for safety
 const loginPage = document.getElementById('login-page');
 const adminDashboard = document.getElementById('admin-dashboard');
 const loginForm = document.getElementById('login-form');
@@ -40,6 +40,176 @@ const orderFilter = document.getElementById('order-filter');
 // State
 let productImages = []; // Array of { file: File|null, url: string, isMain: boolean, linkedVariants: [{type, value}] }
 let currentOrderId = null;
+
+// ============================================
+// GLOBAL FUNCTIONS (must be defined early)
+// ============================================
+
+// Edit product - defined globally early
+window.editProduct = async function(productId) {
+  console.log('Editing product:', productId);
+  try {
+    const product = await FirebaseService.getProduct(productId);
+    console.log('Product loaded:', product);
+    if (product) {
+      openProductModal(product);
+    } else {
+      console.error('Product not found:', productId);
+      alert('Product not found.');
+    }
+  } catch (error) {
+    console.error('Error loading product:', error);
+    alert('Failed to load product: ' + error.message);
+  }
+};
+
+// Delete product - defined globally early
+window.deleteProduct = async function(productId) {
+  if (!confirm('Are you sure you want to delete this product?')) return;
+
+  try {
+    await FirebaseService.deleteProduct(productId);
+    loadProducts();
+    loadDashboardData();
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    alert('Failed to delete product.');
+  }
+};
+
+// View order - defined globally early  
+window.viewOrder = async function(orderId) {
+  try {
+    const order = await FirebaseService.getOrder(orderId);
+    if (!order) return;
+
+    currentOrderId = orderId;
+    orderModalTitle.textContent = `Order ${order.orderNumber}`;
+
+    orderDetails.innerHTML = `
+      <div class="order-section">
+        <h3><i class="fas fa-user"></i> Customer Information</h3>
+        <div class="order-info-row">
+          <span class="order-info-label">Name:</span>
+          <span>${order.customer?.name || 'N/A'}</span>
+        </div>
+        <div class="order-info-row">
+          <span class="order-info-label">Email:</span>
+          <span>${order.customer?.email || 'N/A'}</span>
+        </div>
+        <div class="order-info-row">
+          <span class="order-info-label">Phone:</span>
+          <span>${order.customer?.phone || 'N/A'}</span>
+        </div>
+        <div class="order-info-row">
+          <span class="order-info-label">Address:</span>
+          <span>${order.customer?.address || 'N/A'}, ${order.customer?.city || ''} ${order.customer?.zip || ''}</span>
+        </div>
+        ${order.customer?.notes ? `
+          <div class="order-info-row">
+            <span class="order-info-label">Notes:</span>
+            <span>${order.customer.notes}</span>
+          </div>
+        ` : ''}
+      </div>
+
+      <div class="order-section">
+        <h3><i class="fas fa-box"></i> Order Items</h3>
+        ${(order.items || []).map(item => `
+          <div class="order-product-item">
+            <img src="${item.image || 'https://via.placeholder.com/60x60?text=No+Image'}" alt="${item.name}">
+            <div class="order-product-info">
+              <div class="order-product-name">${item.name}</div>
+              <div class="order-product-variant">${Cart.formatVariants(item.variants || {})}</div>
+              <div>Quantity: ${item.quantity}</div>
+            </div>
+            <div class="order-product-price">${Cart.formatPrice(item.price * item.quantity)}</div>
+          </div>
+        `).join('')}
+        <div class="order-info-row" style="margin-top: 1rem; font-weight: 600; font-size: 1.1rem;">
+          <span>Total:</span>
+          <span style="color: var(--primary-color);">${Cart.formatPrice(order.total || 0)}</span>
+        </div>
+      </div>
+
+      <div class="order-section">
+        <h3><i class="fas fa-info-circle"></i> Order Status</h3>
+        <div class="order-info-row">
+          <span class="order-info-label">Status:</span>
+          <span class="status-badge status-${order.status}">${order.status}</span>
+        </div>
+        <div class="order-info-row">
+          <span class="order-info-label">Order Date:</span>
+          <span>${formatDate(order.createdAt)}</span>
+        </div>
+      </div>
+    `;
+
+    // Footer buttons based on status
+    let footerHTML = '<button class="btn btn-secondary" onclick="closeOrderModalFn()">Close</button>';
+    
+    if (order.status === 'pending') {
+      footerHTML = `
+        <button class="btn btn-danger" onclick="updateOrderStatus('${orderId}', 'cancelled')">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+        <button class="btn btn-primary" onclick="approveOrder('${orderId}')">
+          <i class="fas fa-check"></i> Approve & Notify Customer
+        </button>
+      `;
+    } else if (order.status === 'approved') {
+      footerHTML = `
+        <button class="btn btn-secondary" onclick="closeOrderModalFn()">Close</button>
+        <button class="btn btn-success" onclick="updateOrderStatus('${orderId}', 'completed')">
+          <i class="fas fa-check-double"></i> Mark Completed
+        </button>
+      `;
+    }
+    
+    orderModalFooter.innerHTML = footerHTML;
+    orderModal.classList.add('active');
+  } catch (error) {
+    console.error('Error loading order:', error);
+    alert('Failed to load order details.');
+  }
+};
+
+window.closeOrderModalFn = function() {
+  orderModal.classList.remove('active');
+  currentOrderId = null;
+};
+
+window.updateOrderStatus = async function(orderId, status) {
+  try {
+    await FirebaseService.updateOrderStatus(orderId, status);
+    closeOrderModalFn();
+    loadOrders(orderFilter.value || null);
+    loadDashboardData();
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    alert('Failed to update order status.');
+  }
+};
+
+window.approveOrder = async function(orderId) {
+  try {
+    const order = await FirebaseService.getOrder(orderId);
+    if (!order) return;
+
+    await FirebaseService.updateOrderStatus(orderId, 'approved');
+
+    order.orderNumber = order.orderNumber || orderId;
+    await EmailService.sendOrderConfirmation(order);
+
+    alert('Order approved and confirmation email sent to customer!');
+    closeOrderModalFn();
+    loadOrders(orderFilter.value || null);
+    loadDashboardData();
+  } catch (error) {
+    console.error('Error approving order:', error);
+    alert('Failed to approve order. Please try again.');
+  }
+};
 
 // ============================================
 // AUTHENTICATION
@@ -641,38 +811,6 @@ productForm.addEventListener('submit', async (e) => {
   }
 });
 
-// Edit product
-window.editProduct = async function(productId) {
-  console.log('Editing product:', productId);
-  try {
-    const product = await FirebaseService.getProduct(productId);
-    console.log('Product loaded:', product);
-    if (product) {
-      openProductModal(product);
-    } else {
-      console.error('Product not found:', productId);
-      alert('Product not found.');
-    }
-  } catch (error) {
-    console.error('Error loading product:', error);
-    alert('Failed to load product: ' + error.message);
-  }
-};
-
-// Delete product
-window.deleteProduct = async function(productId) {
-  if (!confirm('Are you sure you want to delete this product?')) return;
-
-  try {
-    await FirebaseService.deleteProduct(productId);
-    loadProducts();
-    loadDashboardData();
-  } catch (error) {
-    console.error('Error deleting product:', error);
-    alert('Failed to delete product.');
-  }
-};
-
 // ============================================
 // ORDERS
 // ============================================
@@ -720,147 +858,10 @@ orderFilter.addEventListener('change', () => {
   loadOrders(status);
 });
 
-// View order
-window.viewOrder = async function(orderId) {
-  try {
-    const order = await FirebaseService.getOrder(orderId);
-    if (!order) return;
-
-    currentOrderId = orderId;
-    orderModalTitle.textContent = `Order ${order.orderNumber}`;
-
-    orderDetails.innerHTML = `
-      <div class="order-section">
-        <h3><i class="fas fa-user"></i> Customer Information</h3>
-        <div class="order-info-row">
-          <span class="order-info-label">Name:</span>
-          <span>${order.customer?.name || 'N/A'}</span>
-        </div>
-        <div class="order-info-row">
-          <span class="order-info-label">Email:</span>
-          <span>${order.customer?.email || 'N/A'}</span>
-        </div>
-        <div class="order-info-row">
-          <span class="order-info-label">Phone:</span>
-          <span>${order.customer?.phone || 'N/A'}</span>
-        </div>
-        <div class="order-info-row">
-          <span class="order-info-label">Address:</span>
-          <span>${order.customer?.address || 'N/A'}, ${order.customer?.city || ''} ${order.customer?.zip || ''}</span>
-        </div>
-        ${order.customer?.notes ? `
-          <div class="order-info-row">
-            <span class="order-info-label">Notes:</span>
-            <span>${order.customer.notes}</span>
-          </div>
-        ` : ''}
-      </div>
-
-      <div class="order-section">
-        <h3><i class="fas fa-box"></i> Order Items</h3>
-        ${(order.items || []).map(item => `
-          <div class="order-product-item">
-            <img src="${item.image || 'https://via.placeholder.com/60x60?text=No+Image'}" alt="${item.name}">
-            <div class="order-product-info">
-              <div class="order-product-name">${item.name}</div>
-              <div class="order-product-variant">${Cart.formatVariants(item.variants || {})}</div>
-              <div>Quantity: ${item.quantity}</div>
-            </div>
-            <div class="order-product-price">${Cart.formatPrice(item.price * item.quantity)}</div>
-          </div>
-        `).join('')}
-        <div class="order-info-row" style="margin-top: 1rem; font-weight: 600; font-size: 1.1rem;">
-          <span>Total:</span>
-          <span style="color: var(--primary-color);">${Cart.formatPrice(order.total || 0)}</span>
-        </div>
-      </div>
-
-      <div class="order-section">
-        <h3><i class="fas fa-info-circle"></i> Order Status</h3>
-        <div class="order-info-row">
-          <span class="order-info-label">Status:</span>
-          <span class="status-badge status-${order.status}">${order.status}</span>
-        </div>
-        <div class="order-info-row">
-          <span class="order-info-label">Order Date:</span>
-          <span>${formatDate(order.createdAt)}</span>
-        </div>
-      </div>
-    `;
-
-    // Footer buttons based on status
-    let footerHTML = '<button class="btn btn-secondary" onclick="closeOrderModalFn()">Close</button>';
-    
-    if (order.status === 'pending') {
-      footerHTML = `
-        <button class="btn btn-danger" onclick="updateOrderStatus('${orderId}', 'cancelled')">
-          <i class="fas fa-times"></i> Cancel
-        </button>
-        <button class="btn btn-primary" onclick="approveOrder('${orderId}')">
-          <i class="fas fa-check"></i> Approve & Notify Customer
-        </button>
-      `;
-    } else if (order.status === 'approved') {
-      footerHTML = `
-        <button class="btn btn-secondary" onclick="closeOrderModalFn()">Close</button>
-        <button class="btn btn-success" onclick="updateOrderStatus('${orderId}', 'completed')">
-          <i class="fas fa-check-double"></i> Mark Completed
-        </button>
-      `;
-    }
-    
-    orderModalFooter.innerHTML = footerHTML;
-    orderModal.classList.add('active');
-  } catch (error) {
-    console.error('Error loading order:', error);
-    alert('Failed to load order details.');
-  }
-};
-
-window.closeOrderModalFn = function() {
-  orderModal.classList.remove('active');
-  currentOrderId = null;
-};
-
 closeOrderModal.addEventListener('click', closeOrderModalFn);
 orderModal.addEventListener('click', (e) => {
   if (e.target === orderModal) closeOrderModalFn();
 });
-
-window.updateOrderStatus = async function(orderId, status) {
-  try {
-    await FirebaseService.updateOrderStatus(orderId, status);
-    closeOrderModalFn();
-    loadOrders(orderFilter.value || null);
-    loadDashboardData();
-  } catch (error) {
-    console.error('Error updating order status:', error);
-    alert('Failed to update order status.');
-  }
-};
-
-window.approveOrder = async function(orderId) {
-  try {
-    // Get order details
-    const order = await FirebaseService.getOrder(orderId);
-    if (!order) return;
-
-    // Update status
-    await FirebaseService.updateOrderStatus(orderId, 'approved');
-
-    // Send confirmation email to customer
-    order.orderNumber = order.orderNumber || orderId;
-    await EmailService.sendOrderConfirmation(order);
-
-    alert('Order approved and confirmation email sent to customer!');
-    closeOrderModalFn();
-    loadOrders(orderFilter.value || null);
-    loadDashboardData();
-  } catch (error) {
-    console.error('Error approving order:', error);
-    alert('Failed to approve order. Please try again.');
-  }
-};
 
 // ============================================
 // UTILITIES
