@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout - 3D Gadgets Lab</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <a href="index.html" class="logo">
+        <i class="fas fa-cube"></i>
+        <span>3D Gadgets Lab</span>
+      </a>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="shop.html">Shop</a>
+        <a href="cart.html" class="cart-icon">
+          <i class="fas fa-shopping-cart"></i>
+          <span class="cart-count">0</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <div class="page-title">
+      <h1>Checkout</h1>
+      <p>Complete your order</p>
+    </div>
+
+    <div class="checkout-container">
+      <!-- Empty Cart Redirect -->
+      <div id="checkout-empty" class="cart-empty" style="display: none;">
+        <i class="fas fa-shopping-cart"></i>
+        <h2>Your cart is empty</h2>
+        <p>Add some items to your cart before checkout.</p>
+        <a href="shop.html" class="btn btn-primary" style="margin-top: 1rem;">
+          <i class="fas fa-arrow-left"></i>
+          Go to Shop
+        </a>
+      </div>
+
+      <!-- Checkout Form -->
+      <div id="checkout-content" style="display: none;">
+        <!-- Order Summary -->
+        <div class="order-summary">
+          <h3><i class="fas fa-receipt"></i> Order Summary</h3>
+          <div id="order-items"></div>
+          <div class="order-total">
+            <span>Total:</span>
+            <span id="order-total-price">0 RSD</span>
+          </div>
+        </div>
+
+        <!-- Customer Information Form -->
+        <form id="checkout-form" class="checkout-form">
+          <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-user"></i> Your Information</h3>
+          
+          <div class="form-group">
+            <label for="name">Full Name <span class="required">*</span></label>
+            <input type="text" id="name" name="name" class="form-control" required 
+                   placeholder="Enter your full name">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email">Email <span class="required">*</span></label>
+              <input type="email" id="email" name="email" class="form-control" required 
+                     placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+              <label for="phone">Phone <span class="required">*</span></label>
+              <input type="tel" id="phone" name="phone" class="form-control" required 
+                     placeholder="+381 XX XXX XXXX">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="address">Street Address <span class="required">*</span></label>
+            <input type="text" id="address" name="address" class="form-control" required 
+                   placeholder="Street name and number">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="city">City <span class="required">*</span></label>
+              <input type="text" id="city" name="city" class="form-control" required 
+                     placeholder="City">
+            </div>
+            <div class="form-group">
+              <label for="zip">ZIP Code</label>
+              <input type="text" id="zip" name="zip" class="form-control" 
+                     placeholder="Postal code">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="notes">Order Notes</label>
+            <textarea id="notes" name="notes" class="form-control" 
+                      placeholder="Any special instructions or notes for your order..."></textarea>
+          </div>
+
+          <div class="alert alert-warning" style="margin-bottom: 1.5rem;">
+            <i class="fas fa-info-circle"></i>
+            <strong>Payment on Delivery:</strong> You will pay when the order is delivered by the carrier.
+          </div>
+
+          <div id="form-error" class="alert alert-error" style="display: none;"></div>
+
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <a href="cart.html" class="btn btn-secondary" style="flex: 1;">
+              <i class="fas fa-arrow-left"></i>
+              Back to Cart
+            </a>
+            <button type="submit" class="btn btn-primary" id="submit-btn" style="flex: 1;">
+              <i class="fas fa-check"></i>
+              Place Order
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Success State -->
+      <div id="checkout-success" class="success-container" style="display: none;">
+        <i class="fas fa-check-circle success-icon"></i>
+        <h1>Order Placed Successfully!</h1>
+        <p>Thank you for your order. We've received your request and will contact you shortly to confirm.</p>
+        <div class="order-number" id="success-order-number"></div>
+        <p style="margin-top: 1rem; font-size: 0.9rem;">
+          You will receive a confirmation email once your order is approved.
+        </p>
+        <a href="shop.html" class="btn btn-primary" style="margin-top: 2rem;">
+          <i class="fas fa-arrow-left"></i>
+          Continue Shopping
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2025 3D Gadgets Lab. All rights reserved.</p>
+  </footer>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  
+  <script src="js/firebase-config.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/emailjs-config.js"></script>
+  
+  <script>
+    const checkoutEmpty = document.getElementById('checkout-empty');
+    const checkoutContent = document.getElementById('checkout-content');
+    const checkoutSuccess = document.getElementById('checkout-success');
+    const checkoutForm = document.getElementById('checkout-form');
+    const orderItems = document.getElementById('order-items');
+    const orderTotalPrice = document.getElementById('order-total-price');
+    const formError = document.getElementById('form-error');
+    const submitBtn = document.getElementById('submit-btn');
+    const successOrderNumber = document.getElementById('success-order-number');
+
+    function renderOrderSummary() {
+      const items = Cart.getCart();
+
+      if (items.length === 0) {
+        checkoutEmpty.style.display = 'block';
+        checkoutContent.style.display = 'none';
+        return;
+      }
+
+      checkoutEmpty.style.display = 'none';
+      checkoutContent.style.display = 'block';
+
+      // Render items
+      orderItems.innerHTML = items.map(item => `
+        <div class="order-item">
+          <span class="order-item-name">
+            ${item.name} ${Cart.formatVariants(item.variants) ? `(${Cart.formatVariants(item.variants)})` : ''} 
+            × ${item.quantity}
+          </span>
+          <span>${Cart.formatPrice(item.price * item.quantity)}</span>
+        </div>
+      `).join('');
+
+      // Update total
+      orderTotalPrice.textContent = Cart.formatPrice(Cart.getTotal());
+    }
+
+    function showError(message) {
+      formError.textContent = message;
+      formError.style.display = 'block';
+      formError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function hideError() {
+      formError.style.display = 'none';
+    }
+
+    function setLoading(loading) {
+      submitBtn.disabled = loading;
+      if (loading) {
+        submitBtn.innerHTML = '<div class="spinner" style="width: 20px; height: 20px; border-width: 2px;"></div> Processing...';
+      } else {
+        submitBtn.innerHTML = '<i class="fas fa-check"></i> Place Order';
+      }
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      hideError();
+      setLoading(true);
+
+      try {
+        const items = Cart.getCart();
+        if (items.length === 0) {
+          showError('Your cart is empty.');
+          setLoading(false);
+          return;
+        }
+
+        // Collect form data
+        const formData = new FormData(checkoutForm);
+        const customer = {
+          name: formData.get('name').trim(),
+          email: formData.get('email').trim(),
+          phone: formData.get('phone').trim(),
+          address: formData.get('address').trim(),
+          city: formData.get('city').trim(),
+          zip: formData.get('zip')?.trim() || '',
+          notes: formData.get('notes')?.trim() || ''
+        };
+
+        // Validate
+        if (!customer.name || !customer.email || !customer.phone || !customer.address || !customer.city) {
+          showError('Please fill in all required fields.');
+          setLoading(false);
+          return;
+        }
+
+        // Create order object
+        const order = {
+          customer,
+          items: items.map(item => ({
+            productId: item.productId,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            variants: item.variants,
+            image: item.image
+          })),
+          total: Cart.getTotal()
+        };
+
+        // Save order to Firebase
+        const { id, orderNumber } = await FirebaseService.createOrder(order);
+        order.orderNumber = orderNumber;
+
+        // Send email notification to admin
+        await EmailService.sendOrderNotification(order);
+
+        // Clear cart
+        Cart.clearCart();
+
+        // Show success
+        checkoutContent.style.display = 'none';
+        checkoutSuccess.style.display = 'block';
+        successOrderNumber.textContent = `Order Number: ${orderNumber}`;
+
+      } catch (error) {
+        console.error('Error placing order:', error);
+        showError('Failed to place order. Please try again or contact us directly.');
+        setLoading(false);
+      }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      renderOrderSummary();
+      checkoutForm.addEventListener('submit', handleSubmit);
+    });
+  </script>
+</body>
+</html>

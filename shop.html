@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop - 3D Gadgets Lab</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <a href="index.html" class="logo">
+        <i class="fas fa-cube"></i>
+        <span>3D Gadgets Lab</span>
+      </a>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="shop.html" class="active">Shop</a>
+        <a href="cart.html" class="cart-icon">
+          <i class="fas fa-shopping-cart"></i>
+          <span class="cart-count">0</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <div class="page-title">
+      <h1>Our Products</h1>
+      <p>Browse our collection of 3D printed gadgets and accessories</p>
+    </div>
+
+    <div class="container">
+      <div id="products-loading" class="loading">
+        <div class="spinner"></div>
+      </div>
+
+      <div id="products-empty" class="cart-empty" style="display: none;">
+        <i class="fas fa-box-open"></i>
+        <h2>No products available</h2>
+        <p>Check back soon for new items!</p>
+      </div>
+
+      <div id="products-grid" class="products-grid"></div>
+    </div>
+  </main>
+
+  <!-- Add to Cart Toast -->
+  <div id="toast" class="alert alert-success" style="position: fixed; bottom: 2rem; right: 2rem; display: none; z-index: 1000;">
+    <i class="fas fa-check-circle"></i>
+    <span>Product added to cart!</span>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2025 3D Gadgets Lab. All rights reserved.</p>
+  </footer>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  
+  <script src="js/firebase-config.js"></script>
+  <script src="js/cart.js"></script>
+  
+  <script>
+    // Product rendering
+    const productsGrid = document.getElementById('products-grid');
+    const productsLoading = document.getElementById('products-loading');
+    const productsEmpty = document.getElementById('products-empty');
+    const toast = document.getElementById('toast');
+
+    // Show toast notification
+    function showToast(message = 'Product added to cart!') {
+      toast.querySelector('span').textContent = message;
+      toast.style.display = 'flex';
+      toast.style.alignItems = 'center';
+      toast.style.gap = '0.5rem';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3000);
+    }
+
+    // Render a single product card
+    function renderProductCard(product) {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      card.setAttribute('data-product-id', product.id);
+
+      const imageUrl = product.images?.[0] || product.image || 'https://via.placeholder.com/300x300?text=No+Image';
+      
+      let variantsHTML = '';
+      if (product.variants && Object.keys(product.variants).length > 0) {
+        variantsHTML = '<div class="product-variants">';
+        
+        for (const [variantName, values] of Object.entries(product.variants)) {
+          variantsHTML += `
+            <div class="variant-group" data-variant="${variantName}">
+              <div class="variant-label">${variantName}</div>
+              <div class="variant-options">
+          `;
+          
+          values.forEach((value, index) => {
+            const isColor = variantName.toLowerCase() === 'color';
+            const selectedClass = index === 0 ? 'selected' : '';
+            
+            if (isColor) {
+              variantsHTML += `
+                <button class="variant-option color-option ${selectedClass}" 
+                        data-value="${value}" 
+                        style="background-color: ${value};"
+                        title="${value}"></button>
+              `;
+            } else {
+              variantsHTML += `
+                <button class="variant-option ${selectedClass}" data-value="${value}">${value}</button>
+              `;
+            }
+          });
+          
+          variantsHTML += '</div></div>';
+        }
+        
+        variantsHTML += '</div>';
+      }
+
+      card.innerHTML = `
+        <img src="${imageUrl}" alt="${product.name}" class="product-image" loading="lazy">
+        <div class="product-info">
+          <h3 class="product-name">${product.name}</h3>
+          <div class="product-price">${Cart.formatPrice(product.price)}</div>
+          ${variantsHTML}
+          <button class="btn btn-primary btn-add-to-cart" style="width: 100%;">
+            <i class="fas fa-cart-plus"></i>
+            Add to Cart
+          </button>
+        </div>
+      `;
+
+      // Variant selection
+      card.querySelectorAll('.variant-options').forEach(optionsContainer => {
+        optionsContainer.addEventListener('click', (e) => {
+          if (e.target.classList.contains('variant-option')) {
+            optionsContainer.querySelectorAll('.variant-option').forEach(opt => opt.classList.remove('selected'));
+            e.target.classList.add('selected');
+          }
+        });
+      });
+
+      // Add to cart
+      card.querySelector('.btn-add-to-cart').addEventListener('click', () => {
+        const selectedVariants = {};
+        card.querySelectorAll('.variant-group').forEach(group => {
+          const variantName = group.dataset.variant;
+          const selectedOption = group.querySelector('.variant-option.selected');
+          if (selectedOption) {
+            selectedVariants[variantName] = selectedOption.dataset.value;
+          }
+        });
+
+        Cart.addItem(product, selectedVariants);
+        showToast();
+      });
+
+      return card;
+    }
+
+    // Load and display products
+    async function loadProducts() {
+      try {
+        const products = await FirebaseService.getProducts();
+        
+        productsLoading.style.display = 'none';
+
+        if (products.length === 0) {
+          productsEmpty.style.display = 'block';
+          return;
+        }
+
+        products.forEach(product => {
+          productsGrid.appendChild(renderProductCard(product));
+        });
+      } catch (error) {
+        console.error('Error loading products:', error);
+        productsLoading.innerHTML = `
+          <div class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i>
+            Failed to load products. Please try again later.
+          </div>
+        `;
+      }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', loadProducts);
+  </script>
+</body>
+</html>

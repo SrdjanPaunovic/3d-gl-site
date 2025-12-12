@@ -143,6 +143,9 @@
     <h1 id="title">Welcome to 3D Gadgets Lab</h1>
     <p id="subtitle">Innovating custom 3D designs and gadget solutions that power your projects forward.</p>
     <div class="social-links">
+      <a href="shop.html" class="shop-link">
+        <i class="fas fa-store"></i> <span data-i18n="shop">Shop</span>
+      </a>
       <a href="https://facebook.com/3dgadgetslab" target="_blank" rel="noopener noreferrer">
         <i class="fab fa-facebook-f"></i> Facebook
       </a>
@@ -157,17 +160,20 @@
     const translations = {
       en: {
         title: 'Welcome to 3D Gadgets Lab',
-        subtitle: 'Innovating custom 3D designs and gadget solutions that power your projects forward.'
+        subtitle: 'Innovating custom 3D designs and gadget solutions that power your projects forward.',
+        shop: 'Shop'
       },
       sr: {
         title: 'Dobrodošli u 3D Gadgets Lab',
-        subtitle: 'Inovativna 3D rešenja i prilagođeni gedžeti koji pokreću vaše projekte.'
+        subtitle: 'Inovativna 3D rešenja i prilagođeni gedžeti koji pokreću vaše projekte.',
+        shop: 'Prodavnica'
       }
     };
     const btnEn = document.getElementById('btn-en');
     const btnSr = document.getElementById('btn-sr');
     const titleEl = document.getElementById('title');
     const subEl = document.getElementById('subtitle');
+    const shopEl = document.querySelector('[data-i18n="shop"]');
     // Detect browser language
     const userLang = navigator.language || navigator.userLanguage;
     const defaultLang = userLang.startsWith('sr') ? 'sr' : 'en';
@@ -175,6 +181,7 @@
       const t = translations[lang] || translations.en;
       titleEl.textContent = t.title;
       subEl.textContent = t.subtitle;
+      if (shopEl) shopEl.textContent = t.shop;
       btnEn.classList.toggle('active', lang === 'en');
       btnSr.classList.toggle('active', lang === 'sr');
       document.documentElement.lang = lang;
