@@ -1,10 +1,6 @@
 # Dependencies
 node_modules/
 
-# Config files with secrets (generated at build time)
-js/firebase-config.js
-js/emailjs-config.js
-
 # Environment files
 .env
 .env.local
