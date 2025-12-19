@@ -579,18 +579,14 @@
 }
 
 .variant-value-tag {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.35rem 0.75rem;
   background: var(--bg-color);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   font-size: 0.85rem;
-}
-
-.variant-value-tag .remove {
-  cursor: pointer;
-  color: var(--error-color);
 }
 
 .add-variant-value {
@@ -606,6 +602,140 @@
   border: 1px solid var(--border-color);
   border-radius: 6px;
   color: var(--text-color);
+}
+
+/* Enhanced Variant Value Row */
+.add-variant-value-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.add-variant-value-row .variant-value-input {
+  flex: 2;
+  min-width: 120px;
+  padding: 0.5rem;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-color);
+}
+
+.add-variant-value-row .variant-color-input {
+  width: 40px;
+  height: 36px;
+  padding: 2px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-color);
+  cursor: pointer;
+}
+
+.add-variant-value-row .variant-price-input {
+  width: 100px;
+  padding: 0.5rem;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-color);
+}
+
+.add-variant-value-row .variant-price-input::placeholder {
+  color: var(--muted-color);
+  font-size: 0.8rem;
+}
+
+/* Variant Value Tag Enhancements */
+.variant-value-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  background: var(--bg-color);
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.variant-color-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.variant-value-name {
+  flex-shrink: 0;
+}
+
+.variant-price-modifier {
+  font-size: 0.75rem;
+  color: var(--success-color);
+  background: rgba(74, 222, 128, 0.15);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.variant-price-modifier:first-child {
+  margin-left: 0;
+}
+
+/* Color variant type styling */
+.variant-type.is-color-variant .variant-color-input {
+  display: block;
+}
+
+.variant-type:not(.is-color-variant) .variant-color-input {
+  opacity: 0.3;
+}
+
+.variant-value-tag .remove {
+  cursor: pointer;
+  color: var(--error-color);
+  font-weight: bold;
+  margin-left: 0.25rem;
+}
+
+.variant-value-tag .remove:hover {
+  color: #ff4444;
+}
+
+/* Color Swatch improvements */
+.variant-color-swatch {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* Add variant section improvements */
+.add-variant-value {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border-color);
+}
+
+/* Mini color swatches for product table */
+.variant-color-swatch-mini {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  margin-right: 3px;
+}
+
+.variant-info-colors {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
 }
 
 /* Login Page */

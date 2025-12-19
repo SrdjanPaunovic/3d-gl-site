@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "3D Gadgets Lab E-commerce Website",
   "scripts": {
+    "dev": "npx serve -l 3000",
+    "dev:copy": "copy js\\firebase-config.dev.js js\\firebase-config.js",
+    "prod:copy": "copy js\\firebase-config.prod.js js\\firebase-config.js",
     "build": "node build.js",
     "deploy": "firebase deploy --only hosting",
     "deploy:preview": "firebase hosting:channel:deploy preview",

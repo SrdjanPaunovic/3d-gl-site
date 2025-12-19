@@ -365,14 +365,42 @@ async function loadProducts() {
       } else if (product.image) {
         imageUrl = product.image;
       }
-      const variantCount = product.variants ? Object.keys(product.variants).length : 0;
+      
+      // Build variant info with color swatches
+      let variantInfo = '';
+      if (product.variants && Object.keys(product.variants).length > 0) {
+        const variantParts = [];
+        for (const [name, values] of Object.entries(product.variants)) {
+          const isColor = name.toLowerCase() === 'color' || name.toLowerCase() === 'boja';
+          if (isColor) {
+            // Show color swatches
+            const swatches = values.map(v => {
+              const colorHex = typeof v === 'object' ? v.colorHex : '';
+              if (colorHex) {
+                return `<span class="variant-color-swatch-mini" style="background-color: ${colorHex};" title="${typeof v === 'object' ? v.value : v}"></span>`;
+              }
+              return '';
+            }).filter(s => s).join('');
+            if (swatches) {
+              variantParts.push(`<span class="variant-info-colors">${swatches}</span>`);
+            } else {
+              variantParts.push(`${name}: ${values.length}`);
+            }
+          } else {
+            variantParts.push(`${name}: ${values.length}`);
+          }
+        }
+        variantInfo = variantParts.join(' | ');
+      } else {
+        variantInfo = 'No variants';
+      }
       
       return `
         <tr data-product-id="${product.id}">
           <td><img src="${imageUrl}" alt="${product.name}"></td>
           <td>${product.name}</td>
           <td>${Cart.formatPrice(product.price)}</td>
-          <td>${variantCount} variant type(s)</td>
+          <td>${variantInfo}</td>
           <td>
             <div class="action-btns">
               <button class="action-btn edit" onclick="editProduct('${product.id}')" title="Edit">
@@ -516,8 +544,17 @@ function getCurrentVariants() {
     if (variantName) {
       const values = [];
       variantDiv.querySelectorAll('.variant-value-tag').forEach(tag => {
-        const value = tag.textContent.replace('×', '').trim();
-        if (value) values.push(value);
+        const value = tag.dataset.value || tag.querySelector('.variant-value-name')?.textContent.trim();
+        const colorHex = tag.dataset.colorHex || '';
+        const priceModifier = parseFloat(tag.dataset.priceModifier) || 0;
+        
+        if (value) {
+          values.push({
+            value,
+            colorHex,
+            priceModifier
+          });
+        }
       });
       if (values.length > 0) {
         variants[variantName] = values;
@@ -539,7 +576,9 @@ function renderImagesGallery() {
     const variants = getCurrentVariants();
     const variantOptions = [];
     for (const [type, values] of Object.entries(variants)) {
-      values.forEach(value => {
+      values.forEach(v => {
+        // Handle both old format (string) and new format (object)
+        const value = typeof v === 'string' ? v : v.value;
         variantOptions.push({ type, value });
       });
     }
@@ -671,10 +710,49 @@ document.addEventListener('click', (e) => {
   }
 });
 
+// Helper function to create variant value tag HTML
+function createVariantValueTagHTML(variantData, isColorVariant = false) {
+  const { value, colorHex, priceModifier } = variantData;
+  const colorSwatch = colorHex ? `<span class="variant-color-swatch" style="background-color: ${colorHex};" title="${colorHex}"></span>` : '';
+  const priceLabel = priceModifier ? `<span class="variant-price-modifier">${priceModifier > 0 ? '+' : ''}${priceModifier} RSD</span>` : '';
+  
+  return `
+    <span class="variant-value-tag" 
+          data-value="${value}" 
+          data-color-hex="${colorHex || ''}" 
+          data-price-modifier="${priceModifier || 0}">
+      ${colorSwatch}
+      <span class="variant-value-name">${value}</span>
+      ${priceLabel}
+      <span class="remove">&times;</span>
+    </span>
+  `;
+}
+
+// Helper to attach remove listener to variant value tags
+function attachVariantTagRemoveListener(tag) {
+  tag.querySelector('.remove').addEventListener('click', () => {
+    tag.remove();
+    renderImagesGallery();
+  });
+}
+
 // Variants
 function addVariantType(name = '', values = []) {
   const variantDiv = document.createElement('div');
   variantDiv.className = 'variant-type';
+  
+  // Check if this is a color variant (for styling purposes)
+  const isColorVariant = name.toLowerCase() === 'color' || name.toLowerCase() === 'boja';
+  
+  // Handle both old format (array of strings) and new format (array of objects)
+  const normalizedValues = values.map(v => {
+    if (typeof v === 'string') {
+      return { value: v, colorHex: '', priceModifier: 0 };
+    }
+    return { value: v.value || v, colorHex: v.colorHex || '', priceModifier: v.priceModifier || 0 };
+  });
+  
   variantDiv.innerHTML = `
     <div class="variant-type-header">
       <input type="text" class="form-control variant-type-name" placeholder="Variant name (e.g., Size, Color)" value="${name}" style="flex: 1;">
@@ -683,18 +761,28 @@ function addVariantType(name = '', values = []) {
       </button>
     </div>
     <div class="variant-values">
-      ${values.map(v => `
-        <span class="variant-value-tag">
-          ${v}
-          <span class="remove">&times;</span>
-        </span>
-      `).join('')}
+      ${normalizedValues.map(v => createVariantValueTagHTML(v, isColorVariant)).join('')}
     </div>
     <div class="add-variant-value">
-      <input type="text" placeholder="Add value (e.g., Small, Red)" class="variant-value-input">
-      <button type="button" class="btn btn-secondary btn-sm add-value-btn">Add</button>
+      <div class="add-variant-value-row">
+        <input type="text" placeholder="Value name (e.g., Small, Red)" class="variant-value-input">
+        <input type="color" class="variant-color-input" title="Pick color (for color variants)" value="#4e8df5">
+        <input type="number" placeholder="Price +/-" class="variant-price-input" title="Price modifier (e.g., 100 or -50)">
+        <button type="button" class="btn btn-secondary btn-sm add-value-btn">Add</button>
+      </div>
     </div>
   `;
+  
+  // Update variant type class when name changes (for color vs non-color styling)
+  const nameInput = variantDiv.querySelector('.variant-type-name');
+  nameInput.addEventListener('input', () => {
+    const isColor = nameInput.value.toLowerCase() === 'color' || nameInput.value.toLowerCase() === 'boja';
+    variantDiv.classList.toggle('is-color-variant', isColor);
+    renderImagesGallery();
+  });
+  if (isColorVariant) {
+    variantDiv.classList.add('is-color-variant');
+  }
 
   // Remove variant type - also refresh gallery to update linking options
   variantDiv.querySelector('.remove-variant-type').addEventListener('click', () => {
@@ -702,31 +790,39 @@ function addVariantType(name = '', values = []) {
     renderImagesGallery();
   });
 
-  // Remove value tags - refresh gallery
-  variantDiv.querySelectorAll('.variant-value-tag .remove').forEach(btn => {
-    btn.addEventListener('click', () => {
-      btn.parentElement.remove();
-      renderImagesGallery();
-    });
+  // Attach remove listeners to existing value tags
+  variantDiv.querySelectorAll('.variant-value-tag').forEach(tag => {
+    attachVariantTagRemoveListener(tag);
   });
 
   // Add value
   const valueInput = variantDiv.querySelector('.variant-value-input');
+  const colorInput = variantDiv.querySelector('.variant-color-input');
+  const priceInput = variantDiv.querySelector('.variant-price-input');
   const addValueBtn = variantDiv.querySelector('.add-value-btn');
 
   function addValue() {
     const value = valueInput.value.trim();
     if (value) {
-      const tag = document.createElement('span');
-      tag.className = 'variant-value-tag';
-      tag.innerHTML = `${value}<span class="remove">&times;</span>`;
-      // Add remove listener for new tag
-      tag.querySelector('.remove').addEventListener('click', () => {
-        tag.remove();
-        renderImagesGallery();
-      });
+      const isColor = variantDiv.classList.contains('is-color-variant');
+      const colorHex = colorInput.value || '';
+      const priceModifier = parseFloat(priceInput.value) || 0;
+      
+      const variantData = { value, colorHex: isColor ? colorHex : '', priceModifier };
+      const tagHTML = createVariantValueTagHTML(variantData, isColor);
+      
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = tagHTML;
+      const tag = tempDiv.firstElementChild;
+      
+      attachVariantTagRemoveListener(tag);
       variantDiv.querySelector('.variant-values').appendChild(tag);
+      
+      // Reset inputs
       valueInput.value = '';
+      priceInput.value = '';
+      colorInput.value = '#4e8df5';
+      
       // Refresh gallery to show new variant in linking options
       renderImagesGallery();
     }

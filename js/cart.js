@@ -14,16 +14,34 @@ const Cart = {
     this.updateCartCount();
   },
 
+  // Calculate total price modifier from selected variants
+  calculatePriceModifier(selectedVariants) {
+    let totalModifier = 0;
+    if (selectedVariants) {
+      Object.values(selectedVariants).forEach(variant => {
+        if (variant && typeof variant === 'object' && variant.priceModifier) {
+          totalModifier += parseFloat(variant.priceModifier) || 0;
+        }
+      });
+    }
+    return totalModifier;
+  },
+
   // Add item to cart
   addItem(product, selectedVariants = {}, quantity = 1) {
     const cart = this.getCart();
     
     // Create unique key based on product ID and variants
+    // Store just the value for key generation
     const variantKey = Object.entries(selectedVariants)
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([k, v]) => `${k}:${v}`)
+      .map(([k, v]) => `${k}:${typeof v === 'object' ? v.value : v}`)
       .join('|');
     const itemKey = `${product.id}-${variantKey}`;
+
+    // Calculate total price including variant modifiers
+    const priceModifier = this.calculatePriceModifier(selectedVariants);
+    const finalPrice = product.price + priceModifier;
 
     // Check if item already exists
     const existingIndex = cart.findIndex(item => item.itemKey === itemKey);
@@ -31,13 +49,25 @@ const Cart = {
     if (existingIndex > -1) {
       cart[existingIndex].quantity += quantity;
     } else {
+      // Normalize variants to include all data
+      const normalizedVariants = {};
+      Object.entries(selectedVariants).forEach(([key, val]) => {
+        if (typeof val === 'object') {
+          normalizedVariants[key] = val;
+        } else {
+          normalizedVariants[key] = { value: val, priceModifier: 0 };
+        }
+      });
+      
       cart.push({
         itemKey,
         productId: product.id,
         name: product.name,
-        price: product.price,
-        image: product.image || product.images?.[0] || '',
-        variants: selectedVariants,
+        basePrice: product.price,
+        price: finalPrice,
+        priceModifier,
+        image: product.image || product.images?.[0]?.url || product.images?.[0] || '',
+        variants: normalizedVariants,
         quantity
       });
     }
@@ -106,7 +136,11 @@ const Cart = {
   // Format variants for display
   formatVariants(variants) {
     return Object.entries(variants)
-      .map(([key, value]) => `${key}: ${value}`)
+      .map(([key, val]) => {
+        // Handle both old format (string) and new format (object)
+        const value = typeof val === 'object' ? val.value : val;
+        return `${key}: ${value}`;
+      })
       .join(', ');
   }
 };
