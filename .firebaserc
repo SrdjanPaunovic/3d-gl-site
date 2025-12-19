@@ -1,12 +1,5 @@
 {
   "projects": {
     "default": "dgadgetlab-shop"
-  },
-  "targets": {
-    "dgadgetlab-shop": {
-      "hosting": {
-        "main": ["3dgadgetslab"]
-      }
-    }
   }
 }
