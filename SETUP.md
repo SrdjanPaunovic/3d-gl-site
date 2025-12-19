@@ -297,67 +297,155 @@ Your site will be available at `https://your-project.web.app`
 
 ---
 
-## Cloudflare Pages Deployment
+## Firebase Hosting Deployment
 
-### Step 1: Connect Repository
+### Step 1: Install Dependencies
 
-1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/)
-2. Navigate to **Workers & Pages**
-3. Click **"Create application"** → **"Pages"** → **"Connect to Git"**
-4. Authorize and select your GitHub repository
-5. Click **"Begin setup"**
+```bash
+npm install
+```
 
-### Step 2: Configure Build Settings
+### Step 2: Login to Firebase
 
-| Setting | Value |
-|---------|-------|
-| **Project name** | `3d-gadgets-lab` (or your preference) |
-| **Production branch** | `main` |
-| **Build command** | `npm run build` |
-| **Build output directory** | `/` (root) |
+```bash
+npm run login
+```
 
-### Step 3: Add Environment Variables
+This will open a browser window to authenticate with your Google account.
 
-Click **"Add variable"** for each of these:
+### Step 3: Configure Firebase Project
 
-**Firebase Variables:**
-| Variable Name | Value |
-|--------------|-------|
-| `FIREBASE_API_KEY` | `AIzaSyBte_rsRxmsl-dCcV4ERa2vcjt0yL1dIxM` |
-| `FIREBASE_AUTH_DOMAIN` | `dgadgetlab-shop.firebaseapp.com` |
-| `FIREBASE_PROJECT_ID` | `dgadgetlab-shop` |
-| `FIREBASE_STORAGE_BUCKET` | `dgadgetlab-shop.firebasestorage.app` |
-| `FIREBASE_MESSAGING_SENDER_ID` | `307656144120` |
-| `FIREBASE_APP_ID` | `1:307656144120:web:8e1ea7c4d2a73c2baab70d` |
-| `FIREBASE_MEASUREMENT_ID` | `G-N9SXRCGPJ9` |
+1. Update `.firebaserc` with your Firebase project ID:
+```json
+{
+  "projects": {
+    "default": "dgadgetlab-shop"
+  }
+}
+```
 
-**EmailJS Variables:**
-| Variable Name | Value |
-|--------------|-------|
-| `EMAILJS_SERVICE_ID` | Your EmailJS service ID |
-| `EMAILJS_TEMPLATE_ID` | Your customer template ID |
-| `EMAILJS_ADMIN_TEMPLATE_ID` | Your admin template ID |
-| `EMAILJS_PUBLIC_KEY` | Your EmailJS public key |
+### Step 4: Configure Environment Variables
 
-### Step 4: Deploy
+Before deploying, generate the config files by setting environment variables:
 
-1. Click **"Save and Deploy"**
-2. Wait for the build to complete
-3. Your site will be available at `https://your-project.pages.dev`
+**On Windows (PowerShell):**
+```powershell
+$env:FIREBASE_API_KEY = "your-api-key"
+$env:FIREBASE_AUTH_DOMAIN = "your-project.firebaseapp.com"
+$env:FIREBASE_PROJECT_ID = "your-project-id"
+$env:FIREBASE_STORAGE_BUCKET = "your-project.firebasestorage.app"
+$env:FIREBASE_MESSAGING_SENDER_ID = "your-sender-id"
+$env:FIREBASE_APP_ID = "your-app-id"
+$env:FIREBASE_MEASUREMENT_ID = "your-measurement-id"
+$env:EMAILJS_SERVICE_ID = "your-emailjs-service-id"
+$env:EMAILJS_TEMPLATE_ID = "your-template-id"
+$env:EMAILJS_ADMIN_TEMPLATE_ID = "your-admin-template-id"
+$env:EMAILJS_PUBLIC_KEY = "your-public-key"
+```
 
-### Step 5: Add Custom Domain (Optional)
+**On macOS/Linux:**
+```bash
+export FIREBASE_API_KEY="your-api-key"
+export FIREBASE_AUTH_DOMAIN="your-project.firebaseapp.com"
+export FIREBASE_PROJECT_ID="your-project-id"
+export FIREBASE_STORAGE_BUCKET="your-project.firebasestorage.app"
+export FIREBASE_MESSAGING_SENDER_ID="your-sender-id"
+export FIREBASE_APP_ID="your-app-id"
+export FIREBASE_MEASUREMENT_ID="your-measurement-id"
+export EMAILJS_SERVICE_ID="your-emailjs-service-id"
+export EMAILJS_TEMPLATE_ID="your-template-id"
+export EMAILJS_ADMIN_TEMPLATE_ID="your-admin-template-id"
+export EMAILJS_PUBLIC_KEY="your-public-key"
+```
 
-1. In your Pages project, go to **"Custom domains"**
-2. Click **"Set up a custom domain"**
-3. Enter your domain (e.g., `shop.3dgadgetslab.com`)
-4. Follow DNS configuration instructions
+Then run the build:
+```bash
+npm run build
+```
 
-### Updating Environment Variables
+### Step 5: Local Preview
 
-To update variables after initial setup:
-1. Go to your Pages project → **Settings** → **Environment variables**
-2. Edit the variables as needed
-3. Trigger a new deployment for changes to take effect
+Test your site locally before deploying:
+```bash
+npm run serve
+```
+
+This starts a local server at `http://localhost:5000`
+
+### Step 6: Deploy to Production
+
+```bash
+npm run deploy
+```
+
+Your site will be available at `https://your-project-id.web.app` and `https://your-project-id.firebaseapp.com`
+
+### Step 7: Preview Channels (Optional)
+
+Create a preview deployment for testing:
+```bash
+npm run deploy:preview
+```
+
+This creates a temporary URL for testing without affecting production.
+
+### Step 8: Add Custom Domain (Optional)
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Select your project → **Hosting**
+3. Click **"Add custom domain"**
+4. Follow the DNS configuration instructions
+
+### CI/CD with GitHub Actions (Optional)
+
+Create `.github/workflows/firebase-hosting.yml`:
+
+```yaml
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Build
+        run: npm run build
+        env:
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+          EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
+          EMAILJS_TEMPLATE_ID: ${{ secrets.EMAILJS_TEMPLATE_ID }}
+          EMAILJS_ADMIN_TEMPLATE_ID: ${{ secrets.EMAILJS_ADMIN_TEMPLATE_ID }}
+          EMAILJS_PUBLIC_KEY: ${{ secrets.EMAILJS_PUBLIC_KEY }}
+          
+      - name: Deploy to Firebase
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: your-project-id
+```
+
+Add these secrets to your GitHub repository settings.
 
 ---
 

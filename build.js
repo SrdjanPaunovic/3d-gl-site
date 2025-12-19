@@ -1,4 +1,4 @@
-// Build script for Cloudflare Pages
+// Build script for Firebase Hosting
 // Generates config files from environment variables
 
 const fs = require('fs');

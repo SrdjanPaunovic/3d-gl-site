@@ -3,9 +3,20 @@
   "version": "1.0.0",
   "description": "3D Gadgets Lab E-commerce Website",
   "scripts": {
-    "build": "node build.js"
+    "build": "node build.js",
+    "deploy": "firebase deploy --only hosting",
+    "deploy:preview": "firebase hosting:channel:deploy preview",
+    "serve": "firebase serve --only hosting",
+    "login": "firebase login"
   },
-  "keywords": ["3d-printing", "webshop", "firebase"],
+  "keywords": [
+    "3d-printing",
+    "webshop",
+    "firebase"
+  ],
   "author": "3D Gadgets Lab",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "firebase-tools": "^15.1.0"
+  }
 }
