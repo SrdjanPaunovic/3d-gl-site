@@ -1,11 +1,11 @@
 {
   "projects": {
-    "default": "your-firebase-project-id"
+    "default": "dgadgetlab-shop"
   },
   "targets": {
-    "your-firebase-project-id": {
+    "dgadgetlab-shop": {
       "hosting": {
-        "main": ["your-custom-site-name"]
+        "main": ["3dgadgetslab"]
       }
     }
   }
