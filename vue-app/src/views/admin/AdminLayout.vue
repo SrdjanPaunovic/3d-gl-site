@@ -81,43 +81,49 @@ async function handleLogout() {
 }
 
 .admin-sidebar {
-  width: 250px;
-  background: var(--card-bg);
+  width: 260px;
+  background: rgba(0, 0, 0, 0.3);
   border-right: 1px solid var(--border-color);
   padding: 1.5rem;
   position: fixed;
   height: 100vh;
   overflow-y: auto;
+  backdrop-filter: blur(10px);
 }
 
 .admin-logo {
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 2rem;
-  padding-bottom: 1rem;
+  padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   
   i {
-    color: var(--primary-color);
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }
 
 .admin-nav {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.35rem;
   
   a {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
+    gap: 0.85rem;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
     color: var(--muted-color);
-    transition: all var(--transition-speed);
+    transition: all 0.2s ease;
+    font-weight: 500;
     
     &:hover {
       background: var(--card-bg-hover);
@@ -125,20 +131,23 @@ async function handleLogout() {
     }
     
     &.active {
-      background: var(--primary-color);
+      background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
       color: white;
+      box-shadow: 0 4px 15px rgba(78, 141, 245, 0.3);
     }
     
     i {
-      width: 20px;
+      width: 22px;
+      text-align: center;
     }
   }
 }
 
 .admin-main {
   flex: 1;
-  margin-left: 250px;
+  margin-left: 260px;
   padding: 2rem;
+  background: var(--bg-color);
 }
 
 .admin-header {
@@ -146,27 +155,41 @@ async function handleLogout() {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
   
   h1 {
     font-size: 1.75rem;
+    margin: 0;
   }
 }
 
 .admin-user {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
+  padding: 0.5rem 1rem 0.5rem 0.5rem;
+  background: var(--card-bg);
+  border-radius: 50px;
+  border: 1px solid var(--border-color);
+  
+  span {
+    font-size: 0.9rem;
+    color: var(--muted-color);
+  }
 }
 
 .admin-user-avatar {
-  width: 40px;
-  height: 40px;
-  background: var(--primary-color);
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
+  color: white;
+  font-size: 0.9rem;
 }
 
 @media (max-width: 1024px) {
@@ -179,9 +202,14 @@ async function handleLogout() {
       display: none;
     }
     
+    .admin-logo {
+      justify-content: center;
+      padding-bottom: 1rem;
+    }
+    
     .admin-nav a {
       justify-content: center;
-      padding: 0.75rem;
+      padding: 0.85rem;
       
       i {
         width: auto;
@@ -192,6 +220,16 @@ async function handleLogout() {
   
   .admin-main {
     margin-left: 70px;
+  }
+  
+  .admin-user span {
+    display: none;
+  }
+  
+  .admin-user {
+    padding: 0.25rem;
+    background: transparent;
+    border: none;
   }
 }
 

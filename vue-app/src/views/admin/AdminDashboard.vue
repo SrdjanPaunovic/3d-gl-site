@@ -142,59 +142,69 @@ function formatDate(date: string | Date) {
 .stat-card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 1.5rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  }
 }
 
 .stat-icon {
   width: 60px;
   height: 60px;
-  border-radius: 12px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
+  flex-shrink: 0;
   
   &.products {
-    background: rgba(99, 102, 241, 0.2);
-    color: #818cf8;
+    background: rgba(78, 141, 245, 0.15);
+    color: var(--primary-color);
   }
   
   &.orders {
-    background: rgba(16, 185, 129, 0.2);
-    color: #34d399;
+    background: rgba(74, 222, 128, 0.15);
+    color: var(--success-color);
   }
   
   &.pending {
-    background: rgba(245, 158, 11, 0.2);
-    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--warning-color);
   }
   
   &.revenue {
-    background: rgba(236, 72, 153, 0.2);
-    color: #f472b6;
+    background: rgba(243, 94, 145, 0.15);
+    color: var(--accent-color);
   }
 }
 
 .stat-info {
   h3 {
     font-size: 1.75rem;
+    font-weight: 700;
     margin-bottom: 0.25rem;
+    line-height: 1;
   }
   
   p {
     color: var(--muted-color);
     font-size: 0.875rem;
+    margin: 0;
   }
 }
 
 .dashboard-section {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 1.5rem;
 }
 
@@ -203,9 +213,12 @@ function formatDate(date: string | Date) {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
   
   h2 {
     font-size: 1.25rem;
+    margin: 0;
   }
 }
 
@@ -218,7 +231,7 @@ function formatDate(date: string | Date) {
   border-collapse: collapse;
   
   th, td {
-    padding: 0.875rem;
+    padding: 1rem;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
   }
@@ -226,43 +239,55 @@ function formatDate(date: string | Date) {
   th {
     color: var(--muted-color);
     font-weight: 500;
-    font-size: 0.875rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  tbody tr {
+    transition: background 0.2s ease;
+    
+    &:hover {
+      background: var(--card-bg-hover);
+    }
   }
   
   code {
-    background: var(--bg-darker);
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.875rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: var(--primary-color);
   }
 }
 
 .status {
   display: inline-block;
-  padding: 0.25rem 0.75rem;
+  padding: 0.35rem 0.85rem;
   border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: 0.7rem;
+  font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
   
   &.pending {
-    background: rgba(245, 158, 11, 0.2);
-    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--warning-color);
   }
   
   &.processing {
-    background: rgba(99, 102, 241, 0.2);
-    color: #818cf8;
+    background: rgba(78, 141, 245, 0.15);
+    color: var(--primary-color);
   }
   
   &.completed {
-    background: rgba(16, 185, 129, 0.2);
-    color: #34d399;
+    background: rgba(74, 222, 128, 0.15);
+    color: var(--success-color);
   }
   
   &.cancelled {
-    background: rgba(239, 68, 68, 0.2);
-    color: #f87171;
+    background: rgba(248, 113, 113, 0.15);
+    color: var(--error-color);
   }
 }
 
@@ -274,6 +299,12 @@ function formatDate(date: string | Date) {
   i {
     font-size: 3rem;
     margin-bottom: 1rem;
+    display: block;
+    opacity: 0.5;
+  }
+  
+  p {
+    margin: 0;
   }
 }
 </style>
