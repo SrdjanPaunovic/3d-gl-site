@@ -11,6 +11,23 @@ const translations: Record<string, Translations> = {
       shop: 'Prodavnica',
       cart: 'Korpa'
     },
+    hero: {
+      description: 'Jedinstveni 3D štampani proizvodi za vaš dom i kancelariju',
+      explore: 'Istraži'
+    },
+    home: {
+      featured: 'Popularni proizvodi',
+      featuredSubtitle: 'Naši najprodavaniji 3D štampani proizvodi',
+      viewAll: 'Pogledaj sve proizvode'
+    },
+    features: {
+      quality: 'Premium Kvalitet',
+      qualityDesc: 'Visokokvalitetni 3D print sa preciznošću do 0.1mm',
+      shipping: 'Brza Dostava',
+      shippingDesc: 'Dostava u roku od 3-5 radnih dana',
+      colors: 'Razne Boje',
+      colorsDesc: 'Izaberite boju koja odgovara vašem stilu'
+    },
     shop: {
       title: 'Svi proizvodi',
       subtitle: 'Pregledajte našu kolekciju 3D štampanih gadžeta i dodataka',
@@ -131,7 +148,8 @@ const translations: Record<string, Translations> = {
     },
     common: {
       cancel: 'Otkaži',
-      save: 'Sačuvaj'
+      save: 'Sačuvaj',
+      loading: 'Učitavanje...'
     }
   },
   en: {
@@ -139,6 +157,23 @@ const translations: Record<string, Translations> = {
       home: 'Home',
       shop: 'Shop',
       cart: 'Cart'
+    },
+    hero: {
+      description: 'Unique 3D printed products for your home and office',
+      explore: 'Explore'
+    },
+    home: {
+      featured: 'Featured Products',
+      featuredSubtitle: 'Our best-selling 3D printed products',
+      viewAll: 'View All Products'
+    },
+    features: {
+      quality: 'Premium Quality',
+      qualityDesc: 'High-quality 3D print with precision up to 0.1mm',
+      shipping: 'Fast Delivery',
+      shippingDesc: 'Delivery within 3-5 business days',
+      colors: 'Various Colors',
+      colorsDesc: 'Choose the color that matches your style'
     },
     shop: {
       title: 'All Products',
@@ -260,7 +295,8 @@ const translations: Record<string, Translations> = {
     },
     common: {
       cancel: 'Cancel',
-      save: 'Save'
+      save: 'Save',
+      loading: 'Loading...'
     }
   }
 }
@@ -269,11 +305,11 @@ const currentLang = ref<string>(localStorage.getItem('lang') || 'sr')
 
 function getNestedValue(obj: Translations, path: string): string {
   const keys = path.split('.')
-  let value: any = obj
+  let value: unknown = obj
   
   for (const key of keys) {
     if (value && typeof value === 'object' && key in value) {
-      value = value[key]
+      value = (value as Record<string, unknown>)[key]
     } else {
       return path // Return key if translation not found
     }

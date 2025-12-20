@@ -253,8 +253,8 @@ async function submitOrder() {
     orderNumber.value = result.orderNumber
     orderSuccess.value = true
     cartStore.clearCart()
-  } catch (err: any) {
-    error.value = err.message || 'Failed to create order. Please try again.'
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to create order. Please try again.'
   } finally {
     submitting.value = false
   }

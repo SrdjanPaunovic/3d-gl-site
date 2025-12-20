@@ -341,7 +341,7 @@ onMounted(async () => {
 const filteredProducts = computed(() => {
   if (!searchQuery.value) return productsStore.products
   const query = searchQuery.value.toLowerCase()
-  return productsStore.products.filter((p: any) => 
+  return productsStore.products.filter((p) => 
     p.name.toLowerCase().includes(query) ||
     (p.nameEn && p.nameEn.toLowerCase().includes(query))
   )
@@ -366,12 +366,12 @@ function getProductImages(product: Product): string[] {
 function getProductVariants(product: Product): FormVariant[] {
   if (!product.variants) return []
   
-  // Handle array format
+  // Handle array format (Variant[])
   if (Array.isArray(product.variants)) {
-    return product.variants.map((v: any) => ({
+    return product.variants.map((v) => ({
       name: v.name || '',
       isColor: v.isColor || false,
-      values: (v.values || []).map((val: any) => {
+      values: (v.values || []).map((val) => {
         if (typeof val === 'string') {
           return { value: val, colorHex: '', priceModifier: 0 }
         }
@@ -384,11 +384,11 @@ function getProductVariants(product: Product): FormVariant[] {
     }))
   }
   
-  // Handle object format { variantName: values[] }
+  // Handle object format { variantName: VariantValue[] }
   return Object.entries(product.variants).map(([name, values]) => ({
     name,
     isColor: name.toLowerCase().includes('color') || name.toLowerCase().includes('boja'),
-    values: (values as any[]).map((val: any) => {
+    values: values.map((val) => {
       if (typeof val === 'string') {
         return { value: val, colorHex: '', priceModifier: 0 }
       }
@@ -406,12 +406,12 @@ function openProductModal(product?: Product) {
     editingProduct.value = product
     Object.assign(form, {
       name: product.name,
-      nameEn: (product as any).nameEn || '',
+      nameEn: product.nameEn || '',
       description: product.description || '',
-      descriptionEn: (product as any).descriptionEn || '',
+      descriptionEn: product.descriptionEn || '',
       price: product.price,
-      stock: (product as any).stock || 0,
-      featured: (product as any).featured || false,
+      stock: product.stock || 0,
+      featured: product.featured || false,
       images: getProductImages(product),
       variants: getProductVariants(product)
     })
@@ -488,7 +488,7 @@ async function saveProduct() {
   saving.value = true
   
   try {
-    const productData: any = {
+    const productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'> = {
       name: form.name,
       nameEn: form.nameEn,
       description: form.description,
@@ -676,7 +676,8 @@ async function deleteProduct() {
 }
 
 .product-modal {
-  background: var(--card-bg);
+  background: rgba(13, 18, 32, 0.95);
+  backdrop-filter: blur(20px);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   width: 100%;

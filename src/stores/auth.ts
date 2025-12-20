@@ -54,8 +54,9 @@ export const useAuthStore = defineStore('auth', () => {
         email: userCredential.user.email || ''
       }
       return true
-    } catch (err: any) {
-      error.value = err.code === 'auth/invalid-credential' 
+    } catch (err) {
+      const errorCode = err instanceof Error && 'code' in err ? (err as { code: string }).code : ''
+      error.value = errorCode === 'auth/invalid-credential' 
         ? 'Invalid email or password' 
         : 'Login failed. Please try again.'
       return false

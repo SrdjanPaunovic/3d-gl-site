@@ -27,7 +27,7 @@
       <!-- Variants -->
       <div v-if="hasVariants" class="product-variants">
         <div 
-          v-for="(values, variantName) in product.variants" 
+          v-for="[variantName, values] in variantEntries" 
           :key="variantName"
           class="variant-group"
         >
@@ -36,19 +36,19 @@
             <template v-for="item in values" :key="getValue(item)">
               <!-- Color variant -->
               <button
-                v-if="isColorVariant(variantName as string) && getColorHex(item)"
+                v-if="isColorVariant(variantName) && getColorHex(item)"
                 class="variant-option color-option"
-                :class="{ selected: isSelected(variantName as string, item) }"
+                :class="{ selected: isSelected(variantName, item) }"
                 :style="{ backgroundColor: getColorHex(item) }"
                 :title="getVariantTitle(item)"
-                @click="selectVariant(variantName as string, item)"
+                @click="selectVariant(variantName, item)"
               />
               <!-- Regular variant -->
               <button
                 v-else
                 class="variant-option"
-                :class="{ selected: isSelected(variantName as string, item) }"
-                @click="selectVariant(variantName as string, item)"
+                :class="{ selected: isSelected(variantName, item) }"
+                @click="selectVariant(variantName, item)"
               >
                 {{ getValue(item) }}
                 <span v-if="getPriceModifier(item)" class="variant-price-mod">
@@ -70,7 +70,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { Product, VariantValue, SelectedVariants } from '@/types'
+import type { Product, VariantValue, SelectedVariants, ProductImage } from '@/types'
 import { useCartStore } from '@/stores/cart'
 import { useToast } from '@/composables/useToast'
 import { useI18n } from '@/i18n'
@@ -108,6 +108,17 @@ initializeVariants()
 const hasVariants = computed(() => 
   props.product.variants && Object.keys(props.product.variants).length > 0
 )
+
+// Get variant entries with proper string typing for the key
+const variantEntries = computed(() => {
+  if (!props.product.variants) return []
+  return Object.entries(props.product.variants) as [string, VariantValue[]][]
+})
+
+// Type guard for ProductImage
+function isProductImage(img: string | ProductImage): img is ProductImage {
+  return typeof img === 'object' && 'url' in img
+}
 
 // Helper to get image URL from string or ProductImage
 function getImageUrl(img: string | { url: string }): string {
@@ -171,9 +182,9 @@ function selectVariant(variantName: string, item: VariantValue | string): void {
   const value = getValue(item)
   const images = props.product.images
   if (images && images.length > 0) {
-    const linkedImageIndex = images.findIndex((img: any) => {
-      if (typeof img === 'string') return false
-      return img.linkedVariants?.some((lv: any) => lv.type === variantName && lv.value === value)
+    const linkedImageIndex = images.findIndex((img) => {
+      if (!isProductImage(img)) return false
+      return img.linkedVariants?.some((lv) => lv.type === variantName && lv.value === value)
     })
     if (linkedImageIndex > -1) {
       currentImageIndex.value = linkedImageIndex

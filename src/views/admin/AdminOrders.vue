@@ -308,7 +308,8 @@ function viewOrder(order: Order) {
 }
 
 .order-modal {
-  background: var(--card-bg);
+  background: rgba(13, 18, 32, 0.95);
+  backdrop-filter: blur(20px);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   width: 100%;
@@ -325,7 +326,7 @@ function viewOrder(order: Order) {
   border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;
-  background: var(--card-bg);
+  background: rgba(13, 18, 32, 0.98);
 }
 
 .modal-body {

@@ -34,8 +34,8 @@ export const useProductsStore = defineStore('products', () => {
         id: doc.id,
         ...doc.data()
       })) as Product[]
-    } catch (err: any) {
-      error.value = err.message
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Unknown error'
       console.error('Error fetching products:', err)
     } finally {
       loading.value = false
@@ -51,7 +51,7 @@ export const useProductsStore = defineStore('products', () => {
         return { id: docSnap.id, ...docSnap.data() } as Product
       }
       return null
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error getting product:', err)
       return null
     }

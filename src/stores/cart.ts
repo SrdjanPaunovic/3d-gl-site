@@ -1,8 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { CartItem, SelectedVariants, Product } from '@/types'
+import type { CartItem, SelectedVariants, Product, ProductImage } from '@/types'
 
 const STORAGE_KEY = '3dgadgets_cart'
+
+// Type guard for ProductImage
+function isProductImage(img: string | ProductImage): img is ProductImage {
+  return typeof img === 'object' && 'url' in img
+}
 
 export const useCartStore = defineStore('cart', () => {
   const items = ref<CartItem[]>([])
@@ -68,7 +73,7 @@ export const useCartStore = defineStore('cart', () => {
         if (typeof firstImage === 'string') {
           imageUrl = firstImage
         } else {
-          const mainImage = product.images.find((img: any) => typeof img !== 'string' && img.isMain) || firstImage
+          const mainImage = product.images.find((img) => isProductImage(img) && img.isMain) || firstImage
           imageUrl = typeof mainImage === 'string' ? mainImage : mainImage.url
         }
       } else if (product.image) {

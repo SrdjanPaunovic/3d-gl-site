@@ -65,7 +65,8 @@ const pageTitle = computed(() => {
     'admin-products': t('admin.products'),
     'admin-orders': t('admin.orders')
   }
-  return titles[route.name as string] || t('admin.dashboard')
+  const routeName = typeof route.name === 'string' ? route.name : ''
+  return titles[routeName] || t('admin.dashboard')
 })
 
 async function handleLogout() {
