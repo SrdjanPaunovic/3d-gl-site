@@ -330,32 +330,32 @@ Before deploying, generate the config files by setting environment variables:
 
 **On Windows (PowerShell):**
 ```powershell
-$env:FIREBASE_API_KEY = "your-api-key"
-$env:FIREBASE_AUTH_DOMAIN = "your-project.firebaseapp.com"
-$env:FIREBASE_PROJECT_ID = "your-project-id"
-$env:FIREBASE_STORAGE_BUCKET = "your-project.firebasestorage.app"
-$env:FIREBASE_MESSAGING_SENDER_ID = "your-sender-id"
-$env:FIREBASE_APP_ID = "your-app-id"
-$env:FIREBASE_MEASUREMENT_ID = "your-measurement-id"
-$env:EMAILJS_SERVICE_ID = "your-emailjs-service-id"
-$env:EMAILJS_TEMPLATE_ID = "your-template-id"
-$env:EMAILJS_ADMIN_TEMPLATE_ID = "your-admin-template-id"
-$env:EMAILJS_PUBLIC_KEY = "your-public-key"
+$env:VITE_FIREBASE_API_KEY = "your-api-key"
+$env:VITE_FIREBASE_AUTH_DOMAIN = "your-project.firebaseapp.com"
+$env:VITE_FIREBASE_PROJECT_ID = "your-project-id"
+$env:VITE_FIREBASE_STORAGE_BUCKET = "your-project.firebasestorage.app"
+$env:VITE_FIREBASE_MESSAGING_SENDER_ID = "your-sender-id"
+$env:VITE_FIREBASE_APP_ID = "your-app-id"
+$env:VITE_FIREBASE_MEASUREMENT_ID = "your-measurement-id"
+$env:VITE_EMAILJS_SERVICE_ID = "your-emailjs-service-id"
+$env:VITE_EMAILJS_TEMPLATE_ID = "your-template-id"
+$env:VITE_EMAILJS_ADMIN_TEMPLATE_ID = "your-admin-template-id"
+$env:VITE_EMAILJS_PUBLIC_KEY = "your-public-key"
 ```
 
 **On macOS/Linux:**
 ```bash
-export FIREBASE_API_KEY="your-api-key"
-export FIREBASE_AUTH_DOMAIN="your-project.firebaseapp.com"
-export FIREBASE_PROJECT_ID="your-project-id"
-export FIREBASE_STORAGE_BUCKET="your-project.firebasestorage.app"
-export FIREBASE_MESSAGING_SENDER_ID="your-sender-id"
-export FIREBASE_APP_ID="your-app-id"
-export FIREBASE_MEASUREMENT_ID="your-measurement-id"
-export EMAILJS_SERVICE_ID="your-emailjs-service-id"
-export EMAILJS_TEMPLATE_ID="your-template-id"
-export EMAILJS_ADMIN_TEMPLATE_ID="your-admin-template-id"
-export EMAILJS_PUBLIC_KEY="your-public-key"
+export VITE_FIREBASE_API_KEY="your-api-key"
+export VITE_FIREBASE_AUTH_DOMAIN="your-project.firebaseapp.com"
+export VITE_FIREBASE_PROJECT_ID="your-project-id"
+export VITE_FIREBASE_STORAGE_BUCKET="your-project.firebasestorage.app"
+export VITE_FIREBASE_MESSAGING_SENDER_ID="your-sender-id"
+export VITE_FIREBASE_APP_ID="your-app-id"
+export VITE_FIREBASE_MEASUREMENT_ID="your-measurement-id"
+export VITE_EMAILJS_SERVICE_ID="your-emailjs-service-id"
+export VITE_EMAILJS_TEMPLATE_ID="your-template-id"
+export VITE_EMAILJS_ADMIN_TEMPLATE_ID="your-admin-template-id"
+export VITE_EMAILJS_PUBLIC_KEY="your-public-key"
 ```
 
 Then run the build:
@@ -424,17 +424,17 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
-          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
-          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
-          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
-          FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
-          EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
-          EMAILJS_TEMPLATE_ID: ${{ secrets.EMAILJS_TEMPLATE_ID }}
-          EMAILJS_ADMIN_TEMPLATE_ID: ${{ secrets.EMAILJS_ADMIN_TEMPLATE_ID }}
-          EMAILJS_PUBLIC_KEY: ${{ secrets.EMAILJS_PUBLIC_KEY }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
+          VITE_EMAILJS_SERVICE_ID: ${{ secrets.VITE_EMAILJS_SERVICE_ID }}
+          VITE_EMAILJS_TEMPLATE_ID: ${{ secrets.VITE_EMAILJS_TEMPLATE_ID }}
+          VITE_EMAILJS_ADMIN_TEMPLATE_ID: ${{ secrets.VITE_EMAILJS_ADMIN_TEMPLATE_ID }}
+          VITE_EMAILJS_PUBLIC_KEY: ${{ secrets.VITE_EMAILJS_PUBLIC_KEY }}
           
       - name: Deploy to Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0
