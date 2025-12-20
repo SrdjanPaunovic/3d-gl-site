@@ -27,28 +27,28 @@
       <!-- Variants -->
       <div v-if="hasVariants" class="product-variants">
         <div 
-          v-for="[variantName, values] in variantEntries" 
-          :key="variantName"
+          v-for="variant in variantEntries" 
+          :key="variant.name"
           class="variant-group"
         >
-          <div class="variant-label">{{ variantName }}</div>
+          <div class="variant-label">{{ variant.name }}</div>
           <div class="variant-options">
-            <template v-for="item in values" :key="getValue(item)">
+            <template v-for="item in variant.values" :key="getValue(item)">
               <!-- Color variant -->
               <button
-                v-if="isColorVariant(variantName) && getColorHex(item)"
+                v-if="variant.isColor && getColorHex(item)"
                 class="variant-option color-option"
-                :class="{ selected: isSelected(variantName, item) }"
+                :class="{ selected: isSelected(variant.name, item) }"
                 :style="{ backgroundColor: getColorHex(item) }"
                 :title="getVariantTitle(item)"
-                @click="selectVariant(variantName, item)"
+                @click="selectVariant(variant.name, item)"
               />
               <!-- Regular variant -->
               <button
                 v-else
                 class="variant-option"
-                :class="{ selected: isSelected(variantName, item) }"
-                @click="selectVariant(variantName, item)"
+                :class="{ selected: isSelected(variant.name, item) }"
+                @click="selectVariant(variant.name, item)"
               >
                 {{ getValue(item) }}
                 <span v-if="getPriceModifier(item)" class="variant-price-mod">
@@ -70,11 +70,18 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { Product, VariantValue, SelectedVariants, ProductImage } from '@/types'
+import type { Product, VariantValue, SelectedVariants, ProductImage, Variant } from '@/types'
 import { useCartStore } from '@/stores/cart'
 import { useToast } from '@/composables/useToast'
 import { useI18n } from '@/i18n'
 import { formatPrice } from '@/utils/format'
+
+// Normalized variant entry for display
+interface NormalizedVariant {
+  name: string
+  isColor: boolean
+  values: VariantValue[]
+}
 
 const props = defineProps<{
   product: Product
@@ -87,32 +94,60 @@ const { t } = useI18n()
 const currentImageIndex = ref(0)
 const selectedVariants = ref<SelectedVariants>({})
 
+// Type guard to check if variants are in array format (Variant[])
+function isVariantArray(variants: Variant[] | Record<string, VariantValue[]>): variants is Variant[] {
+  return Array.isArray(variants) && variants.length > 0 && 'name' in variants[0]
+}
+
+// Normalize variants to a consistent format for display
+function normalizeVariants(variants: Variant[] | Record<string, VariantValue[]>): NormalizedVariant[] {
+  if (!variants) return []
+  
+  // Handle array format: Variant[]
+  if (isVariantArray(variants)) {
+    return variants.map(v => ({
+      name: v.name,
+      isColor: v.isColor || false,
+      values: v.values || []
+    }))
+  }
+  
+  // Handle object format: { variantName: VariantValue[] }
+  return Object.entries(variants).map(([name, values]) => ({
+    name,
+    isColor: name.toLowerCase() === 'color' || name.toLowerCase() === 'boja',
+    values: values || []
+  }))
+}
+
 // Initialize with first variant of each type
 function initializeVariants() {
-  if (props.product.variants) {
-    Object.entries(props.product.variants).forEach(([name, values]) => {
-      if (values.length > 0) {
-        const firstValue = values[0]
-        selectedVariants.value[name] = {
-          value: getValue(firstValue),
-          priceModifier: getPriceModifier(firstValue),
-          colorHex: getColorHex(firstValue)
-        }
+  const normalized = normalizeVariants(props.product.variants)
+  normalized.forEach(variant => {
+    if (variant.values.length > 0) {
+      const firstValue = variant.values[0]
+      selectedVariants.value[variant.name] = {
+        value: getValue(firstValue),
+        priceModifier: getPriceModifier(firstValue),
+        colorHex: getColorHex(firstValue)
       }
-    })
-  }
+    }
+  })
 }
 
 initializeVariants()
 
-const hasVariants = computed(() => 
-  props.product.variants && Object.keys(props.product.variants).length > 0
-)
+const hasVariants = computed(() => {
+  const variants = props.product.variants
+  if (!variants) return false
+  if (Array.isArray(variants)) return variants.length > 0
+  return Object.keys(variants).length > 0
+})
 
-// Get variant entries with proper string typing for the key
-const variantEntries = computed(() => {
+// Get normalized variant entries for display
+const variantEntries = computed((): NormalizedVariant[] => {
   if (!props.product.variants) return []
-  return Object.entries(props.product.variants) as [string, VariantValue[]][]
+  return normalizeVariants(props.product.variants)
 })
 
 // Type guard for ProductImage
@@ -154,11 +189,6 @@ function getColorHex(item: VariantValue | string): string {
 
 function getPriceModifier(item: VariantValue | string): number {
   return typeof item === 'object' ? (item.priceModifier || 0) : 0
-}
-
-function isColorVariant(name: string): boolean {
-  const lowerName = name.toLowerCase()
-  return lowerName === 'color' || lowerName === 'boja'
 }
 
 function getVariantTitle(item: VariantValue | string): string {
