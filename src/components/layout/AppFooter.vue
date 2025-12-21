@@ -11,9 +11,9 @@
         <RouterLink to="/cart">{{ t('nav.cart') || 'Cart' }}</RouterLink>
       </div>
       <div class="footer-social">
-        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-        <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
-        <a href="#" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+        <a href="https://instagram.com/3d_gadgets_lab_ns" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+        <a href="https://facebook.com/3dgadgetslab" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+        <!-- <a href="https://tiktok.com/@3dgadgetslab" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><i class="fab fa-tiktok"></i></a> -->
       </div>
     </div>
     <div class="footer-bottom">
