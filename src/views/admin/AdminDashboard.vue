@@ -43,6 +43,72 @@
       </div>
     </div>
 
+    <!-- Email Test Section -->
+    <div class="dashboard-section email-test-section">
+      <div class="section-header">
+        <h2><i class="fas fa-envelope"></i> Test Email Servisa</h2>
+      </div>
+      
+      <div class="email-test-content">
+        <div class="email-config-status" :class="{ configured: emailConfig.configured, 'not-configured': !emailConfig.configured }">
+          <i :class="emailConfig.configured ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle'"></i>
+          <span v-if="emailConfig.configured">EmailJS je konfigurisan</span>
+          <span v-else>
+            Nedostaju: {{ emailConfig.missing.join(', ') }}
+          </span>
+        </div>
+        
+        <div class="email-test-form">
+          <div class="form-group">
+            <label>Test email adresa</label>
+            <input 
+              v-model="testEmail" 
+              type="email" 
+              class="form-control" 
+              placeholder="vas@email.com"
+            >
+          </div>
+          
+          <div class="test-buttons">
+            <button 
+              class="btn btn-secondary" 
+              @click="testCustomerEmail" 
+              :disabled="!emailConfig.configured || testingCustomer || !testEmail"
+            >
+              <i v-if="testingCustomer" class="fas fa-spinner fa-spin"></i>
+              <i v-else class="fas fa-user"></i>
+              Test Customer Template
+            </button>
+            
+            <button 
+              class="btn btn-secondary" 
+              @click="testAdminEmail" 
+              :disabled="!emailConfig.configured || testingAdmin || !testEmail"
+            >
+              <i v-if="testingAdmin" class="fas fa-spinner fa-spin"></i>
+              <i v-else class="fas fa-user-shield"></i>
+              Test Admin Template
+            </button>
+            
+            <button 
+              class="btn btn-primary" 
+              @click="testBothEmails" 
+              :disabled="!emailConfig.configured || testingBoth || !testEmail"
+            >
+              <i v-if="testingBoth" class="fas fa-spinner fa-spin"></i>
+              <i v-else class="fas fa-paper-plane"></i>
+              Test Oba
+            </button>
+          </div>
+          
+          <div v-if="emailTestResult" class="test-result" :class="emailTestResult.type">
+            <i :class="emailTestResult.type === 'success' ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
+            {{ emailTestResult.message }}
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Recent Orders -->
     <div class="dashboard-section">
       <div class="section-header">
@@ -83,15 +149,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useProductsStore } from '@/stores/products'
 import { useOrdersStore } from '@/stores/orders'
 import { useI18n } from '@/i18n'
 import { formatPrice } from '@/utils/format'
+import { isEmailConfigured, sendCustomerEmail, sendAdminEmail, sendTestEmails } from '@/utils/email'
 
 const productsStore = useProductsStore()
 const ordersStore = useOrdersStore()
 const { t } = useI18n()
+
+// Email test state
+const testEmail = ref('')
+const testingCustomer = ref(false)
+const testingAdmin = ref(false)
+const testingBoth = ref(false)
+const emailTestResult = ref<{ type: 'success' | 'error'; message: string } | null>(null)
+const emailConfig = isEmailConfigured()
 
 onMounted(async () => {
   await Promise.all([
@@ -99,6 +174,69 @@ onMounted(async () => {
     ordersStore.fetchOrders()
   ])
 })
+
+const testOrderData = computed(() => ({
+  orderNumber: 'TEST-' + Date.now(),
+  customerName: 'Test Korisnik',
+  customerEmail: testEmail.value,
+  customerPhone: '+381 60 123 4567',
+  customerAddress: 'Testna ulica 123',
+  customerCity: 'Beograd',
+  customerZip: '11000',
+  items: [
+    { name: 'Test Proizvod 1', quantity: 2, price: 1500, variants: 'Crna, L' },
+    { name: 'Test Proizvod 2', quantity: 1, price: 2500 }
+  ],
+  total: 5500,
+  notes: 'Ovo je test porudžbina'
+}))
+
+async function testCustomerEmail() {
+  testingCustomer.value = true
+  emailTestResult.value = null
+  
+  try {
+    await sendCustomerEmail(testOrderData.value)
+    emailTestResult.value = { type: 'success', message: 'Customer email uspešno poslat!' }
+  } catch (error) {
+    emailTestResult.value = { type: 'error', message: `Greška: ${error instanceof Error ? error.message : 'Unknown'}` }
+  } finally {
+    testingCustomer.value = false
+  }
+}
+
+async function testAdminEmail() {
+  testingAdmin.value = true
+  emailTestResult.value = null
+  
+  try {
+    await sendAdminEmail(testOrderData.value)
+    emailTestResult.value = { type: 'success', message: 'Admin email uspešno poslat!' }
+  } catch (error) {
+    emailTestResult.value = { type: 'error', message: `Greška: ${error instanceof Error ? error.message : 'Unknown'}` }
+  } finally {
+    testingAdmin.value = false
+  }
+}
+
+async function testBothEmails() {
+  testingBoth.value = true
+  emailTestResult.value = null
+  
+  try {
+    const result = await sendTestEmails(testEmail.value)
+    
+    if (result.customer && result.admin) {
+      emailTestResult.value = { type: 'success', message: 'Oba emaila uspešno poslata!' }
+    } else if (result.errors.length > 0) {
+      emailTestResult.value = { type: 'error', message: result.errors.join('; ') }
+    }
+  } catch (error) {
+    emailTestResult.value = { type: 'error', message: `Greška: ${error instanceof Error ? error.message : 'Unknown'}` }
+  } finally {
+    testingBoth.value = false
+  }
+}
 
 const stats = computed(() => {
   const orders = ordersStore.orders
@@ -305,6 +443,105 @@ function formatDate(date: string | Date) {
   
   p {
     margin: 0;
+  }
+}
+
+/* Email Test Section */
+.email-test-section {
+  .section-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    
+    i {
+      color: var(--primary-color);
+    }
+  }
+}
+
+.email-test-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.email-config-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  
+  &.configured {
+    background: rgba(74, 222, 128, 0.1);
+    color: var(--success-color);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+  }
+  
+  &.not-configured {
+    background: rgba(251, 191, 36, 0.1);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+  }
+  
+  i {
+    font-size: 1rem;
+  }
+}
+
+.email-test-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  
+  .form-group {
+    max-width: 400px;
+    
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--muted-color);
+    }
+  }
+}
+
+.test-buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  
+  .btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.test-result {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  max-width: 600px;
+  
+  &.success {
+    background: rgba(74, 222, 128, 0.1);
+    color: var(--success-color);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+  }
+  
+  &.error {
+    background: rgba(248, 113, 113, 0.1);
+    color: var(--error-color);
+    border: 1px solid rgba(248, 113, 113, 0.3);
+  }
+  
+  i {
+    font-size: 1.25rem;
   }
 }
 </style>
