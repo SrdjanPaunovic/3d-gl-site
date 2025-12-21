@@ -78,17 +78,22 @@
         <div class="cart-summary">
           <h3>{{ t('cart.summary') || 'Pregled narudžbine' }}</h3>
           <div class="summary-row">
-            <span>{{ t('cart.subtotal') || 'Ukupno' }}</span>
-            <span>{{ formatPrice(total) }}</span>
+            <span>Međuzbir</span>
+            <span>{{ formatPrice(summary.subtotal) }}</span>
           </div>
           <div class="summary-row">
-            <span>{{ t('cart.shipping') || 'Dostava' }}</span>
-            <span class="shipping-note">{{ t('cart.shippingNote') || 'Izračunava se na checkout-u' }}</span>
+            <span>Dostava</span>
+            <span v-if="summary.shipping === 0" class="shipping-free">Besplatna</span>
+            <span v-else>{{ formatPrice(summary.shipping) }}</span>
+          </div>
+          <div v-if="summary.amountToFreeShipping > 0" class="free-shipping-hint">
+            <i class="fas fa-info-circle"></i>
+            Još {{ formatPrice(summary.amountToFreeShipping) }} do besplatne dostave
           </div>
           <div class="summary-divider"></div>
           <div class="summary-row summary-total">
             <span>{{ t('cart.total') }}</span>
-            <span>{{ formatPrice(total) }}</span>
+            <span>{{ formatPrice(summary.total) }}</span>
           </div>
           <div class="cart-actions">
             <RouterLink to="/checkout" class="btn btn-primary btn-lg">
@@ -116,7 +121,7 @@ const cartStore = useCartStore()
 const { t } = useI18n()
 
 const items = computed(() => cartStore.items)
-const total = computed(() => cartStore.total)
+const summary = computed(() => cartStore.summary)
 const isEmpty = computed(() => cartStore.isEmpty)
 
 const { updateQuantity, removeItem, formatVariants } = cartStore
@@ -396,9 +401,22 @@ const { updateQuantity, removeItem, formatVariants } = cartStore
   align-items: center;
   margin-bottom: 0.75rem;
   
-  .shipping-note {
-    font-size: 0.85rem;
-    color: var(--muted-color);
+  .shipping-free {
+    color: var(--success-color, #22c55e);
+    font-weight: 500;
+  }
+}
+
+.free-shipping-hint {
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  background: rgba(78, 141, 245, 0.1);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  
+  i {
+    margin-right: 0.4rem;
   }
 }
 

@@ -36,6 +36,25 @@ export const useCartStore = defineStore('cart', () => {
 
   const isEmpty = computed(() => items.value.length === 0)
 
+  // Order summary with subtotal, shipping, tax, and total
+  const summary = computed(() => {
+    const subtotal = items.value.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    // Free shipping over 5000 RSD, otherwise 350 RSD
+    const shipping = subtotal >= 5000 ? 0 : (subtotal > 0 ? 350 : 0)
+    // No tax for now (included in price)
+    const tax = 0
+    const grandTotal = subtotal + shipping + tax
+
+    return {
+      subtotal,
+      shipping,
+      tax,
+      total: grandTotal,
+      freeShippingThreshold: 5000,
+      amountToFreeShipping: Math.max(0, 5000 - subtotal)
+    }
+  })
+
   // Calculate price modifier from selected variants
   function calculatePriceModifier(selectedVariants: SelectedVariants): number {
     let totalModifier = 0
@@ -137,6 +156,7 @@ export const useCartStore = defineStore('cart', () => {
     count,
     total,
     isEmpty,
+    summary,
     addItem,
     updateQuantity,
     removeItem,

@@ -173,17 +173,22 @@
           </div>
           <div class="order-summary-divider"></div>
           <div class="order-subtotal">
-            <span>Ukupno</span>
-            <span>{{ formatPrice(total) }}</span>
+            <span>Međuzbir</span>
+            <span>{{ formatPrice(summary.subtotal) }}</span>
           </div>
           <div class="order-shipping">
             <span>Dostava</span>
-            <span class="shipping-tbd">Izračunava se</span>
+            <span v-if="summary.shipping === 0" class="shipping-free">Besplatna</span>
+            <span v-else>{{ formatPrice(summary.shipping) }}</span>
+          </div>
+          <div v-if="summary.amountToFreeShipping > 0" class="free-shipping-hint">
+            <i class="fas fa-info-circle"></i>
+            Još {{ formatPrice(summary.amountToFreeShipping) }} do besplatne dostave
           </div>
           <div class="order-summary-divider"></div>
           <div class="order-total">
             <span>{{ t('cart.total') }}</span>
-            <span>{{ formatPrice(total) }}</span>
+            <span>{{ formatPrice(summary.total) }}</span>
           </div>
         </div>
       </div>
@@ -225,7 +230,7 @@ const ordersStore = useOrdersStore()
 const { t } = useI18n()
 
 const items = computed(() => cartStore.items)
-const total = computed(() => cartStore.total)
+const summary = computed(() => cartStore.summary)
 const isEmpty = computed(() => cartStore.isEmpty)
 const { formatVariants } = cartStore
 
@@ -249,7 +254,7 @@ async function submitOrder() {
   error.value = null
 
   try {
-    const result = await ordersStore.createOrder(customer, cartStore.items, cartStore.total)
+    const result = await ordersStore.createOrder(customer, cartStore.items, summary.value.total, summary.value.shipping)
     orderNumber.value = result.orderNumber
     orderSuccess.value = true
     cartStore.clearCart()
@@ -585,8 +590,22 @@ async function submitOrder() {
   margin-bottom: 0.5rem;
 }
 
-.shipping-tbd {
-  font-style: italic;
+.shipping-free {
+  color: var(--success-color, #22c55e);
+  font-weight: 500;
+}
+
+.free-shipping-hint {
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  background: rgba(78, 141, 245, 0.1);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  
+  i {
+    margin-right: 0.4rem;
+  }
 }
 
 .order-total {

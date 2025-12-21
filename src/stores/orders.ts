@@ -13,6 +13,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore'
 import { db } from '@/firebase'
+import { sendCustomerEmail, sendAdminEmail } from '@/utils/email'
 import type { Order, Customer, CartItem } from '@/types'
 
 export const useOrdersStore = defineStore('orders', () => {
@@ -61,7 +62,7 @@ export const useOrdersStore = defineStore('orders', () => {
     }
   }
 
-  async function createOrder(customer: Customer, items: CartItem[], total: number): Promise<{ id: string; orderNumber: string }> {
+  async function createOrder(customer: Customer, items: CartItem[], total: number, shipping: number = 0): Promise<{ id: string; orderNumber: string }> {
     const orderNumber = `ORD-${Date.now()}`
     
     const orderItems = items.map(item => ({
@@ -73,14 +74,44 @@ export const useOrdersStore = defineStore('orders', () => {
       variants: item.variants
     }))
     
+    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    
     const docRef = await addDoc(ordersCollection, {
       orderNumber,
       customer,
       items: orderItems,
+      subtotal,
+      shipping,
       total,
       status: 'pending',
       createdAt: serverTimestamp()
     })
+
+    // Send email notifications (don't await - fire and forget)
+    const emailData = {
+      orderNumber,
+      customerName: customer.name,
+      customerEmail: customer.email,
+      customerPhone: customer.phone,
+      customerAddress: customer.address,
+      customerCity: customer.city,
+      customerZip: customer.zip,
+      items: orderItems.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+        image: item.image,
+        variants: item.variants ? Object.entries(item.variants).map(([k, v]) => `${k}: ${v.value}`).join(', ') : undefined
+      })),
+      total,
+      shipping,
+      tax: 0,
+      notes: customer.notes
+    }
+
+    // Send emails in background
+    sendCustomerEmail(emailData).catch(err => console.error('Failed to send customer email:', err))
+    sendAdminEmail(emailData).catch(err => console.error('Failed to send admin email:', err))
     
     return { id: docRef.id, orderNumber }
   }
