@@ -5,7 +5,8 @@ const EMAILJS_CONFIG = {
   serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID || '',
   customerTemplateId: import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '',
   adminTemplateId: import.meta.env.VITE_EMAILJS_ADMIN_TEMPLATE_ID || '',
-  publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY || ''
+  publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '',
+  adminEmail: import.meta.env.VITE_ADMIN_EMAIL || '3dgadgetslab@gmail.com'
 }
 
 // Initialize EmailJS
@@ -93,6 +94,7 @@ export async function sendAdminEmail(data: OrderEmailData): Promise<boolean> {
 
   try {
     await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.adminTemplateId, {
+      to_email: EMAILJS_CONFIG.adminEmail,
       order_id: data.orderNumber,
       orders: orders,
       cost: {
