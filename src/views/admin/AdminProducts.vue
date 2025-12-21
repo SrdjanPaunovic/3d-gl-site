@@ -577,6 +577,7 @@
                           </div>
                           <div class="color-dropdown-section save-section">
                             <button
+                              v-if="val.colorHex"
                               type="button"
                               class="btn btn-sm btn-secondary save-preset-btn"
                               @click="
