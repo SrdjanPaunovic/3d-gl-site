@@ -37,6 +37,7 @@ jobs:
           VITE_EMAILJS_TEMPLATE_ID: ${{ secrets.EMAILJS_TEMPLATE_ID }}
           VITE_EMAILJS_ADMIN_TEMPLATE_ID: ${{ secrets.EMAILJS_ADMIN_TEMPLATE_ID }}
           VITE_EMAILJS_PUBLIC_KEY: ${{ secrets.EMAILJS_PUBLIC_KEY }}
+          VITE_ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
 
       # Deploy preview channel for PRs
       - name: Deploy to Firebase Preview Channel

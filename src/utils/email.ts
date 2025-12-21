@@ -94,7 +94,6 @@ export async function sendAdminEmail(data: OrderEmailData): Promise<boolean> {
 
   try {
     await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.adminTemplateId, {
-      to_email: EMAILJS_CONFIG.adminEmail,
       order_id: data.orderNumber,
       orders: orders,
       cost: {
@@ -102,10 +101,11 @@ export async function sendAdminEmail(data: OrderEmailData): Promise<boolean> {
         tax: (data.tax || 0).toFixed(2),
         total: data.total.toFixed(2)
       },
-      email: data.customerEmail,
+      email: EMAILJS_CONFIG.adminEmail,
       // Additional admin-specific fields
       order_date: new Date().toLocaleDateString('sr-RS'),
       customer_name: data.customerName,
+      customer_email: data.customerEmail,
       customer_phone: data.customerPhone,
       customer_address: `${data.customerAddress}, ${data.customerCity} ${data.customerZip}`,
       customer_notes: data.notes || 'Nema napomena'
