@@ -4,32 +4,48 @@
     <div class="products-header">
       <div class="search-box">
         <i class="fas fa-search"></i>
-        <input 
-          v-model="searchQuery" 
-          type="text" 
+        <input
+          v-model="searchQuery"
+          type="text"
           :placeholder="t('admin.searchProducts')"
           class="form-control"
-        >
+        />
       </div>
       <button class="btn btn-primary" @click="openProductModal()">
         <i class="fas fa-plus"></i>
-        {{ t('admin.addProduct') }}
+        {{ t("admin.addProduct") }}
       </button>
     </div>
 
     <!-- Products Grid -->
     <div class="products-grid" v-if="filteredProducts.length">
-      <div v-for="product in filteredProducts" :key="product.id" class="product-card">
+      <div
+        v-for="product in filteredProducts"
+        :key="product.id"
+        class="product-card"
+      >
         <div class="product-image">
-          <img :src="getFirstImageUrl(product)" :alt="product.name">
+          <img :src="getFirstImageUrl(product)" :alt="product.name" />
           <div class="product-actions">
-            <button class="btn btn-icon" @click="openProductModal(product)" :title="t('admin.edit')">
+            <button
+              class="btn btn-icon"
+              @click="openProductModal(product)"
+              :title="t('admin.edit')"
+            >
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-icon" @click="duplicateProduct(product)" :title="t('admin.duplicate')">
+            <button
+              class="btn btn-icon"
+              @click="duplicateProduct(product)"
+              :title="t('admin.duplicate')"
+            >
               <i class="fas fa-copy"></i>
             </button>
-            <button class="btn btn-icon btn-danger" @click="confirmDelete(product)" :title="t('admin.delete')">
+            <button
+              class="btn btn-icon btn-danger"
+              @click="confirmDelete(product)"
+              :title="t('admin.delete')"
+            >
               <i class="fas fa-trash"></i>
             </button>
           </div>
@@ -38,8 +54,17 @@
           <h3>{{ product.name }}</h3>
           <p class="product-price">{{ formatPrice(product.price) }}</p>
           <div class="product-meta">
-            <span :class="['stock-badge', (product.stock ?? 0) > 0 ? 'in-stock' : 'out-of-stock']">
-              {{ (product.stock ?? 0) > 0 ? `${product.stock} in stock` : 'Out of stock' }}
+            <span
+              :class="[
+                'stock-badge',
+                (product.stock ?? 0) > 0 ? 'in-stock' : 'out-of-stock',
+              ]"
+            >
+              {{
+                (product.stock ?? 0) > 0
+                  ? `${product.stock} in stock`
+                  : "Out of stock"
+              }}
             </span>
             <span class="featured-badge" v-if="product.featured">
               <i class="fas fa-star"></i>
@@ -48,12 +73,12 @@
         </div>
       </div>
     </div>
-    
+
     <div v-else class="empty-state">
       <i class="fas fa-box-open"></i>
-      <p>{{ t('admin.noProducts') }}</p>
+      <p>{{ t("admin.noProducts") }}</p>
       <button class="btn btn-primary" @click="openProductModal()">
-        {{ t('admin.addProduct') }}
+        {{ t("admin.addProduct") }}
       </button>
     </div>
 
@@ -61,34 +86,38 @@
     <div v-if="showModal" class="modal-overlay">
       <div class="modal product-modal">
         <div class="modal-header">
-          <h2>{{ editingProduct ? t('admin.editProduct') : t('admin.addProduct') }}</h2>
+          <h2>
+            {{
+              editingProduct ? t("admin.editProduct") : t("admin.addProduct")
+            }}
+          </h2>
           <button class="btn btn-icon" @click="closeModal">
             <i class="fas fa-times"></i>
           </button>
         </div>
-        
+
         <form @submit.prevent="saveProduct" class="modal-body">
           <div class="form-tabs">
-            <button 
-              type="button" 
+            <button
+              type="button"
               :class="['tab', { active: activeTab === 'basic' }]"
               @click="activeTab = 'basic'"
             >
-              {{ t('admin.basicInfo') }}
+              {{ t("admin.basicInfo") }}
             </button>
-            <button 
-              type="button" 
+            <button
+              type="button"
               :class="['tab', { active: activeTab === 'images' }]"
               @click="activeTab = 'images'"
             >
-              {{ t('admin.images') }}
+              {{ t("admin.images") }}
             </button>
-            <button 
-              type="button" 
+            <button
+              type="button"
               :class="['tab', { active: activeTab === 'variants' }]"
               @click="activeTab = 'variants'"
             >
-              {{ t('admin.variants') }}
+              {{ t("admin.variants") }}
             </button>
           </div>
 
@@ -96,107 +125,145 @@
           <div v-show="activeTab === 'basic'" class="tab-content">
             <div class="form-row">
               <div class="form-group">
-                <label>{{ t('product.name') }} (SR)</label>
-                <input v-model="form.name" type="text" class="form-control" required>
+                <label>{{ t("product.name") }} (SR)</label>
+                <input
+                  v-model="form.name"
+                  type="text"
+                  class="form-control"
+                  required
+                />
               </div>
               <div class="form-group">
-                <label>{{ t('product.name') }} (EN)</label>
-                <input v-model="form.nameEn" type="text" class="form-control">
+                <label>{{ t("product.name") }} (EN)</label>
+                <input v-model="form.nameEn" type="text" class="form-control" />
               </div>
             </div>
-            
+
             <div class="form-row">
               <div class="form-group">
-                <label>{{ t('product.description') }} (SR)</label>
-                <textarea v-model="form.description" class="form-control" rows="3"></textarea>
+                <label>{{ t("product.description") }} (SR)</label>
+                <textarea
+                  v-model="form.description"
+                  class="form-control"
+                  rows="3"
+                ></textarea>
               </div>
               <div class="form-group">
-                <label>{{ t('product.description') }} (EN)</label>
-                <textarea v-model="form.descriptionEn" class="form-control" rows="3"></textarea>
+                <label>{{ t("product.description") }} (EN)</label>
+                <textarea
+                  v-model="form.descriptionEn"
+                  class="form-control"
+                  rows="3"
+                ></textarea>
               </div>
             </div>
-            
+
             <div class="form-row">
               <div class="form-group">
-                <label>{{ t('product.price') }} (RSD)</label>
-                <input v-model.number="form.price" type="number" class="form-control" required min="0">
+                <label>{{ t("product.price") }} (RSD)</label>
+                <input
+                  v-model.number="form.price"
+                  type="number"
+                  class="form-control"
+                  required
+                  min="0"
+                />
               </div>
               <div class="form-group">
-                <label>{{ t('product.stock') }}</label>
-                <input v-model.number="form.stock" type="number" class="form-control" min="0">
+                <label>{{ t("product.stock") }}</label>
+                <input
+                  v-model.number="form.stock"
+                  type="number"
+                  class="form-control"
+                  min="0"
+                />
               </div>
             </div>
-            
+
             <div class="form-group checkbox-group">
               <label>
-                <input type="checkbox" v-model="form.featured">
-                {{ t('product.featured') }}
+                <input type="checkbox" v-model="form.featured" />
+                {{ t("product.featured") }}
               </label>
             </div>
           </div>
 
           <!-- Images Tab -->
           <div v-show="activeTab === 'images'" class="tab-content">
-            <div class="image-upload-zone" @click="triggerFileInput" @dragover.prevent @drop.prevent="handleDrop">
-              <input ref="fileInput" type="file" accept="image/*" multiple hidden @change="handleFileSelect">
+            <div
+              class="image-upload-zone"
+              @click="triggerFileInput"
+              @dragover.prevent
+              @drop.prevent="handleDrop"
+            >
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/*"
+                multiple
+                hidden
+                @change="handleFileSelect"
+              />
               <i class="fas fa-cloud-upload-alt"></i>
-              <p>{{ t('admin.dropImages') }}</p>
-              <span>{{ t('admin.orClickToSelect') }}</span>
+              <p>{{ t("admin.dropImages") }}</p>
+              <span>{{ t("admin.orClickToSelect") }}</span>
             </div>
-            
+
             <div class="image-preview-grid" v-if="form.images.length">
-              <div 
-                v-for="(image, index) in form.images" 
-                :key="image.url" 
+              <div
+                v-for="(image, index) in form.images"
+                :key="image.url"
                 class="image-preview"
                 :class="{ 'is-main': index === mainImageIndex }"
               >
-                <img 
-                  :src="image.url" 
+                <img
+                  :src="image.url"
                   alt="Product image"
-                  :style="{ objectPosition: `${image.position.x}% ${image.position.y}%` }"
-                >
-                
+                  :style="{
+                    objectPosition: `${image.position.x}% ${image.position.y}%`,
+                  }"
+                />
+
                 <!-- Image controls -->
                 <div class="image-controls">
-                  <button 
-                    type="button" 
-                    class="control-btn move-left" 
+                  <button
+                    type="button"
+                    class="control-btn move-left"
                     @click="moveImage(index, -1)"
                     :disabled="index === 0"
                     title="Move left"
                   >
                     <i class="fas fa-chevron-left"></i>
                   </button>
-                  <button 
-                    type="button" 
-                    class="control-btn set-main" 
+                  <button
+                    type="button"
+                    class="control-btn set-main"
                     @click="setMainImage(index)"
                     :class="{ active: index === mainImageIndex }"
                     title="Set as main"
                   >
                     <i class="fas fa-star"></i>
                   </button>
-                  <button 
-                    type="button" 
-                    class="control-btn position-btn" 
+                  <button
+                    type="button"
+                    class="control-btn position-btn"
                     @click="openPositionEditor(index)"
                     title="Adjust crop position"
                   >
                     <i class="fas fa-crop-alt"></i>
                   </button>
-                  <button 
-                    type="button" 
-                    class="control-btn link-variant-btn" 
+                  <button
+                    type="button"
+                    class="control-btn link-variant-btn"
                     @click="openVariantLinker(index)"
                     :class="{ active: image.linkedVariants.length > 0 }"
                     title="Link to variants"
                   >
                     <i class="fas fa-link"></i>
                   </button>
-                  <button 
-                    type="button" 
-                    class="control-btn move-right" 
+                  <button
+                    type="button"
+                    class="control-btn move-right"
                     @click="moveImage(index, 1)"
                     :disabled="index === form.images.length - 1"
                     title="Move right"
@@ -204,101 +271,170 @@
                     <i class="fas fa-chevron-right"></i>
                   </button>
                 </div>
-                
-                <button type="button" class="remove-image" @click="removeImage(index)">
+
+                <button
+                  type="button"
+                  class="remove-image"
+                  @click="removeImage(index)"
+                >
                   <i class="fas fa-times"></i>
                 </button>
-                <span v-if="index === mainImageIndex" class="main-badge">Main</span>
-                <span v-if="image.linkedVariants.length > 0" class="linked-badge" :title="getLinkedVariantsTitle(image)">
+                <span v-if="index === mainImageIndex" class="main-badge"
+                  >Main</span
+                >
+                <span
+                  v-if="image.linkedVariants.length > 0"
+                  class="linked-badge"
+                  :title="getLinkedVariantsTitle(image)"
+                >
                   <i class="fas fa-link"></i> {{ image.linkedVariants.length }}
                 </span>
               </div>
             </div>
-            
+
             <!-- Position Editor Modal -->
-            <div v-if="positionEditorIndex !== null" class="position-editor-overlay">
+            <div
+              v-if="positionEditorIndex !== null"
+              class="position-editor-overlay"
+            >
               <div class="position-editor">
                 <div class="position-editor-header">
                   <h4>Adjust Crop Position</h4>
-                  <button type="button" class="btn-close" @click="closePositionEditor">
+                  <button
+                    type="button"
+                    class="btn-close"
+                    @click="closePositionEditor"
+                  >
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
-                <p class="position-editor-hint">Click on the image to set the focal point for cropping</p>
+                <p class="position-editor-hint">
+                  Click on the image to set the focal point for cropping
+                </p>
                 <div class="position-editor-container">
                   <div class="position-editor-original">
                     <span class="label">Original</span>
-                    <img 
+                    <img
                       ref="positionEditorImage"
-                      :src="form.images[positionEditorIndex].url" 
+                      :src="form.images[positionEditorIndex].url"
                       alt="Position editor"
                       @click="handlePositionClick"
-                    >
-                    <div 
+                    />
+                    <div
                       class="focal-point"
                       :style="{
                         left: form.images[positionEditorIndex].position.x + '%',
-                        top: form.images[positionEditorIndex].position.y + '%'
+                        top: form.images[positionEditorIndex].position.y + '%',
                       }"
                     ></div>
                   </div>
                   <div class="position-editor-preview">
                     <span class="label">Preview (1:1)</span>
                     <div class="preview-frame">
-                      <img 
-                        :src="form.images[positionEditorIndex].url" 
+                      <img
+                        :src="form.images[positionEditorIndex].url"
                         alt="Preview"
                         :style="{
-                          objectPosition: `${form.images[positionEditorIndex].position.x}% ${form.images[positionEditorIndex].position.y}%`
+                          objectPosition: `${form.images[positionEditorIndex].position.x}% ${form.images[positionEditorIndex].position.y}%`,
                         }"
-                      >
+                      />
                     </div>
                   </div>
                 </div>
                 <div class="position-editor-actions">
-                  <button type="button" class="btn btn-secondary" @click="resetPosition">Reset to Center</button>
-                  <button type="button" class="btn btn-primary" @click="closePositionEditor">Done</button>
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    @click="resetPosition"
+                  >
+                    Reset to Center
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    @click="closePositionEditor"
+                  >
+                    Done
+                  </button>
                 </div>
               </div>
             </div>
-            
+
             <!-- Variant Linker Modal -->
-            <div v-if="variantLinkerIndex !== null" class="position-editor-overlay">
+            <div
+              v-if="variantLinkerIndex !== null"
+              class="position-editor-overlay"
+            >
               <div class="variant-linker">
                 <div class="position-editor-header">
                   <h4>Link Image to Variants</h4>
-                  <button type="button" class="btn-close" @click="closeVariantLinker">
+                  <button
+                    type="button"
+                    class="btn-close"
+                    @click="closeVariantLinker"
+                  >
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
-                <p class="position-editor-hint">Select which variant options should show this image when selected</p>
-                
+                <p class="position-editor-hint">
+                  Select which variant options should show this image when
+                  selected
+                </p>
+
                 <div class="variant-linker-content">
                   <div class="linker-image-preview">
-                    <img :src="form.images[variantLinkerIndex].url" alt="Image to link">
+                    <img
+                      :src="form.images[variantLinkerIndex].url"
+                      alt="Image to link"
+                    />
                   </div>
-                  
-                  <div v-if="form.variants.length === 0" class="no-variants-message">
+
+                  <div
+                    v-if="form.variants.length === 0"
+                    class="no-variants-message"
+                  >
                     No variants defined. Add variants in the Variants tab first.
                   </div>
-                  
+
                   <div v-else class="variant-options-list">
-                    <div v-for="variant in form.variants" :key="variant.name" class="linker-variant-group">
+                    <div
+                      v-for="variant in form.variants"
+                      :key="variant.name"
+                      class="linker-variant-group"
+                    >
                       <div class="linker-variant-name">{{ variant.name }}</div>
                       <div class="linker-variant-values">
-                        <label 
-                          v-for="val in variant.values" 
+                        <label
+                          v-for="val in variant.values"
                           :key="val.value"
                           class="linker-checkbox"
-                          :class="{ checked: isVariantLinked(variantLinkerIndex, variant.name, val.value) }"
+                          :class="{
+                            checked: isVariantLinked(
+                              variantLinkerIndex,
+                              variant.name,
+                              val.value
+                            ),
+                          }"
                         >
-                          <input 
+                          <input
                             type="checkbox"
-                            :checked="isVariantLinked(variantLinkerIndex, variant.name, val.value)"
-                            @change="toggleVariantLink(variantLinkerIndex, variant.name, val.value)"
-                          >
-                          <span 
-                            v-if="variant.isColor && val.colorHex" 
+                            :checked="
+                              isVariantLinked(
+                                variantLinkerIndex,
+                                variant.name,
+                                val.value
+                              )
+                            "
+                            @change="
+                              toggleVariantLink(
+                                variantLinkerIndex,
+                                variant.name,
+                                val.value
+                              )
+                            "
+                          />
+                          <span
+                            v-if="variant.isColor && val.colorHex"
                             class="color-swatch"
                             :style="{ backgroundColor: val.colorHex }"
                           ></span>
@@ -308,82 +444,120 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <div class="position-editor-actions">
-                  <button type="button" class="btn btn-secondary" @click="clearVariantLinks(variantLinkerIndex)">Clear All</button>
-                  <button type="button" class="btn btn-primary" @click="closeVariantLinker">Done</button>
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    @click="clearVariantLinks(variantLinkerIndex)"
+                  >
+                    Clear All
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    @click="closeVariantLinker"
+                  >
+                    Done
+                  </button>
                 </div>
               </div>
             </div>
-            
+
             <div v-if="uploadingImages" class="upload-progress">
               <div class="spinner"></div>
-              <span>{{ t('admin.uploading') }}...</span>
+              <span>{{ t("admin.uploading") }}...</span>
             </div>
           </div>
 
           <!-- Variants Tab -->
           <div v-show="activeTab === 'variants'" class="tab-content">
             <div class="variants-list">
-              <div v-for="(variant, vIndex) in form.variants" :key="vIndex" class="variant-block">
+              <div
+                v-for="(variant, vIndex) in form.variants"
+                :key="vIndex"
+                class="variant-block"
+              >
                 <div class="variant-header">
                   <div class="form-group variant-name-group">
-                    <input 
-                      v-model="variant.name" 
-                      type="text" 
-                      class="form-control" 
+                    <input
+                      v-model="variant.name"
+                      type="text"
+                      class="form-control"
                       :placeholder="t('admin.variantName')"
-                    >
+                    />
                     <div class="checkbox-inline">
                       <label>
-                        <input type="checkbox" v-model="variant.isColor">
-                        {{ t('admin.isColorVariant') }}
+                        <input type="checkbox" v-model="variant.isColor" />
+                        {{ t("admin.isColorVariant") }}
                       </label>
                     </div>
                   </div>
-                  <button type="button" class="btn btn-icon btn-danger" @click="removeVariant(vIndex)">
+                  <button
+                    type="button"
+                    class="btn btn-icon btn-danger"
+                    @click="removeVariant(vIndex)"
+                  >
                     <i class="fas fa-trash"></i>
                   </button>
                 </div>
-                
+
                 <div class="variant-values">
-                  <div v-for="(val, valIndex) in variant.values" :key="valIndex" class="variant-value-item" :class="{ 'has-error': isDuplicateValue(vIndex, valIndex) }">
+                  <div
+                    v-for="(val, valIndex) in variant.values"
+                    :key="valIndex"
+                    class="variant-value-item"
+                    :class="{ 'has-error': isDuplicateValue(vIndex, valIndex) }"
+                  >
                     <div class="value-input-wrapper">
-                      <input 
-                        v-model="val.value" 
-                        type="text" 
-                        class="form-control value-input" 
-                        :class="{ 'input-error': isDuplicateValue(vIndex, valIndex) }"
+                      <input
+                        v-model="val.value"
+                        type="text"
+                        class="form-control value-input"
+                        :class="{
+                          'input-error': isDuplicateValue(vIndex, valIndex),
+                        }"
                         :placeholder="t('admin.value')"
+                      />
+                      <span
+                        v-if="isDuplicateValue(vIndex, valIndex)"
+                        class="error-tooltip"
                       >
-                      <span v-if="isDuplicateValue(vIndex, valIndex)" class="error-tooltip">
                         <i class="fas fa-exclamation-circle"></i>
                         Duplikat
                       </span>
                     </div>
-                    
+
                     <div v-if="variant.isColor" class="color-picker-wrapper">
                       <div class="color-preset-dropdown">
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           class="color-preview-btn"
-                          :style="{ backgroundColor: val.colorHex || '#000000' }"
+                          :style="{
+                            backgroundColor: val.colorHex || '#000000',
+                          }"
                           @click="toggleColorDropdown(vIndex, valIndex)"
                           title="Izaberi boju"
                         ></button>
-                        <div 
-                          v-if="activeColorDropdown?.vIndex === vIndex && activeColorDropdown?.valIndex === valIndex" 
+                        <div
+                          v-if="
+                            activeColorDropdown?.vIndex === vIndex &&
+                            activeColorDropdown?.valIndex === valIndex
+                          "
                           class="color-dropdown"
                         >
                           <div class="color-dropdown-section">
                             <div class="dropdown-label">Izaberi boju</div>
-                            <input 
-                              v-model="val.colorHex" 
-                              type="color" 
+                            <input
+                              v-model="val.colorHex"
+                              type="color"
                               class="color-input-large"
-                            >
+                            />
                           </div>
-                          <div v-if="colorPresets.length > 0" class="color-dropdown-section">
+                          <div
+                            v-if="colorPresets.length > 0"
+                            class="color-dropdown-section"
+                          >
                             <div class="dropdown-label">Sačuvane boje</div>
                             <div class="preset-colors">
                               <button
@@ -395,67 +569,88 @@
                                 :title="preset.name"
                                 @click="applyColorPreset(val, preset)"
                               >
-                                <span class="preset-tooltip">{{ preset.name }}</span>
+                                <span class="preset-tooltip">{{
+                                  preset.name
+                                }}</span>
                               </button>
                             </div>
                           </div>
                           <div class="color-dropdown-section save-section">
-                            <button 
-                              type="button" 
+                            <button
+                              type="button"
                               class="btn btn-sm btn-secondary save-preset-btn"
-                              @click="openSavePresetModal(val.colorHex, val.value)"
+                              @click="
+                                openSavePresetModal(val.colorHex, val.value)
+                              "
                             >
                               <i class="fas fa-save"></i> Sačuvaj kao preset
                             </button>
                           </div>
-                          <button type="button" class="close-dropdown-btn" @click="closeColorDropdown">
+                          <button
+                            type="button"
+                            class="close-dropdown-btn"
+                            @click="closeColorDropdown"
+                          >
                             <i class="fas fa-check"></i> Gotovo
                           </button>
                         </div>
                       </div>
                       <div class="hex-input-wrapper">
-                        <input 
-                          v-model="val.colorHex" 
-                          type="text" 
-                          class="form-control hex-input" 
-                          :class="{ 'input-error': isDuplicateColor(vIndex, valIndex) }"
+                        <input
+                          v-model="val.colorHex"
+                          type="text"
+                          class="form-control hex-input"
+                          :class="{
+                            'input-error': isDuplicateColor(vIndex, valIndex),
+                          }"
                           placeholder="#000000"
                           maxlength="7"
+                        />
+                        <span
+                          v-if="isDuplicateColor(vIndex, valIndex)"
+                          class="error-tooltip"
                         >
-                        <span v-if="isDuplicateColor(vIndex, valIndex)" class="error-tooltip">
                           <i class="fas fa-exclamation-circle"></i>
                           Ista boja
                         </span>
                       </div>
                     </div>
-                    
+
                     <div class="price-modifier-wrapper">
                       <span class="modifier-label">+/-</span>
-                      <input 
-                        v-model.number="val.priceModifier" 
-                        type="number" 
-                        class="form-control modifier-input" 
+                      <input
+                        v-model.number="val.priceModifier"
+                        type="number"
+                        class="form-control modifier-input"
                         placeholder="0"
-                      >
+                      />
                       <span class="modifier-currency">RSD</span>
                     </div>
-                    
-                    <button type="button" class="btn btn-icon btn-sm" @click="removeVariantValue(vIndex, valIndex)">
+
+                    <button
+                      type="button"
+                      class="btn btn-icon btn-sm"
+                      @click="removeVariantValue(vIndex, valIndex)"
+                    >
                       <i class="fas fa-times"></i>
                     </button>
                   </div>
-                  
-                  <button type="button" class="btn btn-secondary btn-sm" @click="addVariantValue(vIndex)">
+
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    @click="addVariantValue(vIndex)"
+                  >
                     <i class="fas fa-plus"></i>
-                    {{ t('admin.addValue') }}
+                    {{ t("admin.addValue") }}
                   </button>
                 </div>
               </div>
             </div>
-            
+
             <button type="button" class="btn btn-secondary" @click="addVariant">
               <i class="fas fa-plus"></i>
-              {{ t('admin.addVariant') }}
+              {{ t("admin.addVariant") }}
             </button>
           </div>
 
@@ -465,19 +660,21 @@
               Ispravi duplikate pre čuvanja
             </span>
             <button type="button" class="btn btn-secondary" @click="closeModal">
-              {{ t('common.cancel') }}
+              {{ t("common.cancel") }}
             </button>
-            <button 
-              type="submit" 
-              class="btn btn-primary" 
+            <button
+              type="submit"
+              class="btn btn-primary"
               :disabled="saving || hasValidationErrors"
-              :title="hasValidationErrors ? 'Ispravi duplikate pre čuvanja' : ''"
+              :title="
+                hasValidationErrors ? 'Ispravi duplikate pre čuvanja' : ''
+              "
             >
               <template v-if="saving">
                 <div class="spinner spinner-sm"></div>
               </template>
               <template v-else>
-                {{ editingProduct ? t('common.save') : t('admin.addProduct') }}
+                {{ editingProduct ? t("common.save") : t("admin.addProduct") }}
               </template>
             </button>
           </div>
@@ -486,30 +683,38 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div v-if="productToDelete" class="modal-overlay" @click.self="productToDelete = null">
+    <div
+      v-if="productToDelete"
+      class="modal-overlay"
+      @click.self="productToDelete = null"
+    >
       <div class="modal confirm-modal">
         <div class="modal-header">
-          <h2>{{ t('admin.confirmDelete') }}</h2>
+          <h2>{{ t("admin.confirmDelete") }}</h2>
         </div>
         <div class="modal-body">
-          <p>{{ t('admin.confirmDelete') }}: {{ productToDelete.name }}?</p>
+          <p>{{ t("admin.confirmDelete") }}: {{ productToDelete.name }}?</p>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" @click="productToDelete = null">
-            {{ t('common.cancel') }}
+            {{ t("common.cancel") }}
           </button>
-          <button class="btn btn-danger" @click="deleteProduct" :disabled="deleting">
+          <button
+            class="btn btn-danger"
+            @click="deleteProduct"
+            :disabled="deleting"
+          >
             <template v-if="deleting">
               <div class="spinner spinner-sm"></div>
             </template>
             <template v-else>
-              {{ t('admin.delete') }}
+              {{ t("admin.delete") }}
             </template>
           </button>
         </div>
       </div>
     </div>
-    
+
     <!-- Save Color Preset Modal -->
     <div v-if="showSavePresetModal" class="modal-overlay">
       <div class="modal confirm-modal">
@@ -521,34 +726,41 @@
         </div>
         <div class="modal-body">
           <div class="preset-preview">
-            <div class="preset-color-preview" :style="{ backgroundColor: newPresetColor }"></div>
+            <div
+              class="preset-color-preview"
+              :style="{ backgroundColor: newPresetColor }"
+            ></div>
             <span>{{ newPresetColor }}</span>
           </div>
           <div class="form-group">
             <label>Naziv boje</label>
-            <input 
-              v-model="newPresetName" 
-              type="text" 
-              class="form-control" 
+            <input
+              v-model="newPresetName"
+              type="text"
+              class="form-control"
               placeholder="npr. Tamno plava, Sunset Orange..."
               @keyup.enter="saveColorPreset"
-            >
+            />
           </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" @click="closeSavePresetModal">
             Otkaži
           </button>
-          <button class="btn btn-primary" @click="saveColorPreset" :disabled="!newPresetName.trim()">
+          <button
+            class="btn btn-primary"
+            @click="saveColorPreset"
+            :disabled="!newPresetName.trim()"
+          >
             <i class="fas fa-save"></i> Sačuvaj
           </button>
         </div>
       </div>
     </div>
-    
+
     <!-- Manage Color Presets Button (floating) -->
-    <button 
-      v-if="colorPresets.length > 0 && showModal && activeTab === 'variants'" 
+    <button
+      v-if="colorPresets.length > 0 && showModal && activeTab === 'variants'"
       class="manage-presets-btn"
       @click="showManagePresetsModal = true"
       title="Upravljaj presetima"
@@ -556,7 +768,7 @@
       <i class="fas fa-palette"></i>
       <span>{{ colorPresets.length }}</span>
     </button>
-    
+
     <!-- Manage Presets Modal -->
     <div v-if="showManagePresetsModal" class="modal-overlay">
       <div class="modal confirm-modal manage-presets-modal">
@@ -571,20 +783,34 @@
             Nema sačuvanih boja
           </div>
           <div v-else class="presets-list">
-            <div v-for="(preset, index) in colorPresets" :key="preset.name" class="preset-list-item">
-              <div class="preset-color-preview" :style="{ backgroundColor: preset.hex }"></div>
+            <div
+              v-for="(preset, index) in colorPresets"
+              :key="preset.name"
+              class="preset-list-item"
+            >
+              <div
+                class="preset-color-preview"
+                :style="{ backgroundColor: preset.hex }"
+              ></div>
               <div class="preset-info">
                 <span class="preset-name">{{ preset.name }}</span>
                 <span class="preset-hex">{{ preset.hex }}</span>
               </div>
-              <button type="button" class="btn btn-icon btn-sm btn-danger" @click="deleteColorPreset(index)">
+              <button
+                type="button"
+                class="btn btn-icon btn-sm btn-danger"
+                @click="deleteColorPreset(index)"
+              >
                 <i class="fas fa-trash"></i>
               </button>
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="showManagePresetsModal = false">
+          <button
+            class="btn btn-secondary"
+            @click="showManagePresetsModal = false"
+          >
             Zatvori
           </button>
         </div>
@@ -594,507 +820,539 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted } from 'vue'
-import { useProductsStore } from '@/stores/products'
-import { useI18n } from '@/i18n'
-import { formatPrice } from '@/utils/format'
-import { useToast } from '@/composables/useToast'
-import type { Product, VariantValue, ProductImage } from '@/types'
+import { ref, computed, reactive, onMounted } from "vue";
+import { useProductsStore } from "@/stores/products";
+import { useI18n } from "@/i18n";
+import { formatPrice } from "@/utils/format";
+import { useToast } from "@/composables/useToast";
+import type { Product, VariantValue, ProductImage } from "@/types";
 
 interface ImagePosition {
-  x: number  // 0-100 percentage
-  y: number  // 0-100 percentage
+  x: number; // 0-100 percentage
+  y: number; // 0-100 percentage
 }
 
 interface LinkedVariant {
-  type: string
-  value: string
+  type: string;
+  value: string;
 }
 
 interface FormImage {
-  url: string
-  position: ImagePosition
-  linkedVariants: LinkedVariant[]
+  url: string;
+  position: ImagePosition;
+  linkedVariants: LinkedVariant[];
 }
 
 interface ProductForm {
-  name: string
-  nameEn: string
-  description: string
-  descriptionEn: string
-  price: number
-  stock: number
-  featured: boolean
-  images: FormImage[]
-  variants: FormVariant[]
+  name: string;
+  nameEn: string;
+  description: string;
+  descriptionEn: string;
+  price: number;
+  stock: number;
+  featured: boolean;
+  images: FormImage[];
+  variants: FormVariant[];
 }
 
 interface FormVariant {
-  name: string
-  isColor: boolean
-  values: VariantValue[]
+  name: string;
+  isColor: boolean;
+  values: VariantValue[];
 }
 
 interface ColorPreset {
-  name: string
-  hex: string
+  name: string;
+  hex: string;
 }
 
-const PRESETS_STORAGE_KEY = 'color-presets'
+const PRESETS_STORAGE_KEY = "color-presets";
 
-const productsStore = useProductsStore()
-const { t } = useI18n()
-const { showToast } = useToast()
+const productsStore = useProductsStore();
+const { t } = useI18n();
+const { showToast } = useToast();
 
-const searchQuery = ref('')
-const showModal = ref(false)
-const activeTab = ref<'basic' | 'images' | 'variants'>('basic')
-const editingProduct = ref<Product | null>(null)
-const productToDelete = ref<Product | null>(null)
-const saving = ref(false)
-const deleting = ref(false)
-const uploadingImages = ref(false)
-const fileInput = ref<HTMLInputElement | null>(null)
-const mainImageIndex = ref(0)
-const positionEditorIndex = ref<number | null>(null)
-const positionEditorImage = ref<HTMLImageElement | null>(null)
-const variantLinkerIndex = ref<number | null>(null)
+const searchQuery = ref("");
+const showModal = ref(false);
+const activeTab = ref<"basic" | "images" | "variants">("basic");
+const editingProduct = ref<Product | null>(null);
+const productToDelete = ref<Product | null>(null);
+const saving = ref(false);
+const deleting = ref(false);
+const uploadingImages = ref(false);
+const fileInput = ref<HTMLInputElement | null>(null);
+const mainImageIndex = ref(0);
+const positionEditorIndex = ref<number | null>(null);
+const positionEditorImage = ref<HTMLImageElement | null>(null);
+const variantLinkerIndex = ref<number | null>(null);
 
 // Color preset state
-const colorPresets = ref<ColorPreset[]>([])
-const activeColorDropdown = ref<{ vIndex: number; valIndex: number } | null>(null)
-const showSavePresetModal = ref(false)
-const showManagePresetsModal = ref(false)
-const newPresetColor = ref('')
-const newPresetName = ref('')
+const colorPresets = ref<ColorPreset[]>([]);
+const activeColorDropdown = ref<{ vIndex: number; valIndex: number } | null>(
+  null
+);
+const showSavePresetModal = ref(false);
+const showManagePresetsModal = ref(false);
+const newPresetColor = ref("");
+const newPresetName = ref("");
 
 const defaultForm = (): ProductForm => ({
-  name: '',
-  nameEn: '',
-  description: '',
-  descriptionEn: '',
+  name: "",
+  nameEn: "",
+  description: "",
+  descriptionEn: "",
   price: 0,
   stock: 10,
   featured: false,
   images: [],
-  variants: []
-})
+  variants: [],
+});
 
-const form = reactive<ProductForm>(defaultForm())
+const form = reactive<ProductForm>(defaultForm());
 
 onMounted(async () => {
-  await productsStore.fetchProducts()
-  loadColorPresets()
-})
+  await productsStore.fetchProducts();
+  loadColorPresets();
+});
 
 // Color preset functions
 function loadColorPresets() {
   try {
-    const stored = localStorage.getItem(PRESETS_STORAGE_KEY)
+    const stored = localStorage.getItem(PRESETS_STORAGE_KEY);
     if (stored) {
-      colorPresets.value = JSON.parse(stored)
+      colorPresets.value = JSON.parse(stored);
     }
   } catch {
-    colorPresets.value = []
+    colorPresets.value = [];
   }
 }
 
 function saveColorPresetsToStorage() {
-  localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(colorPresets.value))
+  localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(colorPresets.value));
 }
 
 function toggleColorDropdown(vIndex: number, valIndex: number) {
-  if (activeColorDropdown.value?.vIndex === vIndex && activeColorDropdown.value?.valIndex === valIndex) {
-    activeColorDropdown.value = null
+  if (
+    activeColorDropdown.value?.vIndex === vIndex &&
+    activeColorDropdown.value?.valIndex === valIndex
+  ) {
+    activeColorDropdown.value = null;
   } else {
-    activeColorDropdown.value = { vIndex, valIndex }
+    activeColorDropdown.value = { vIndex, valIndex };
   }
 }
 
 function closeColorDropdown() {
-  activeColorDropdown.value = null
+  activeColorDropdown.value = null;
 }
 
 function applyColorPreset(val: VariantValue, preset: ColorPreset) {
-  val.colorHex = preset.hex
-  val.value = preset.name
-  closeColorDropdown()
+  val.colorHex = preset.hex;
+  val.value = preset.name;
+  closeColorDropdown();
 }
 
 function openSavePresetModal(colorHex: string, suggestedName: string) {
-  newPresetColor.value = colorHex || '#000000'
-  newPresetName.value = suggestedName || ''
-  showSavePresetModal.value = true
+  newPresetColor.value = colorHex || "#000000";
+  newPresetName.value = suggestedName || "";
+  showSavePresetModal.value = true;
 }
 
 function closeSavePresetModal() {
-  showSavePresetModal.value = false
-  newPresetColor.value = ''
-  newPresetName.value = ''
+  showSavePresetModal.value = false;
+  newPresetColor.value = "";
+  newPresetName.value = "";
 }
 
 function saveColorPreset() {
-  if (!newPresetName.value.trim()) return
-  
+  if (!newPresetName.value.trim()) return;
+
   // Check if name already exists
-  const existingIndex = colorPresets.value.findIndex(p => p.name.toLowerCase() === newPresetName.value.toLowerCase())
+  const existingIndex = colorPresets.value.findIndex(
+    (p) => p.name.toLowerCase() === newPresetName.value.toLowerCase()
+  );
   if (existingIndex >= 0) {
     // Update existing
-    colorPresets.value[existingIndex].hex = newPresetColor.value
+    colorPresets.value[existingIndex].hex = newPresetColor.value;
   } else {
     // Add new
     colorPresets.value.push({
       name: newPresetName.value.trim(),
-      hex: newPresetColor.value
-    })
+      hex: newPresetColor.value,
+    });
   }
-  
-  saveColorPresetsToStorage()
-  showToast('Boja sačuvana kao preset', 'success')
-  closeSavePresetModal()
-  closeColorDropdown()
+
+  saveColorPresetsToStorage();
+  showToast("Boja sačuvana kao preset", "success");
+  closeSavePresetModal();
+  closeColorDropdown();
 }
 
 function deleteColorPreset(index: number) {
-  colorPresets.value.splice(index, 1)
-  saveColorPresetsToStorage()
+  colorPresets.value.splice(index, 1);
+  saveColorPresetsToStorage();
 }
 
 // Validation functions
 function isDuplicateValue(variantIndex: number, valueIndex: number): boolean {
-  const variant = form.variants[variantIndex]
-  const currentValue = variant.values[valueIndex].value.trim().toLowerCase()
-  
-  if (!currentValue) return false
-  
+  const variant = form.variants[variantIndex];
+  const currentValue = variant.values[valueIndex].value.trim().toLowerCase();
+
+  if (!currentValue) return false;
+
   // Check if same value exists in another position within this variant
-  return variant.values.some((val, idx) => 
-    idx !== valueIndex && val.value.trim().toLowerCase() === currentValue
-  )
+  return variant.values.some(
+    (val, idx) =>
+      idx !== valueIndex && val.value.trim().toLowerCase() === currentValue
+  );
 }
 
 function isDuplicateColor(variantIndex: number, valueIndex: number): boolean {
-  const variant = form.variants[variantIndex]
-  if (!variant.isColor) return false
-  
-  const currentColor = variant.values[valueIndex].colorHex?.toLowerCase()
-  if (!currentColor) return false
-  
+  const variant = form.variants[variantIndex];
+  if (!variant.isColor) return false;
+
+  const currentColor = variant.values[valueIndex].colorHex?.toLowerCase();
+  if (!currentColor) return false;
+
   // Check if same color exists in another position within this variant
-  return variant.values.some((val, idx) => 
-    idx !== valueIndex && val.colorHex?.toLowerCase() === currentColor
-  )
+  return variant.values.some(
+    (val, idx) =>
+      idx !== valueIndex && val.colorHex?.toLowerCase() === currentColor
+  );
 }
 
 const hasValidationErrors = computed(() => {
   for (let vIndex = 0; vIndex < form.variants.length; vIndex++) {
-    const variant = form.variants[vIndex]
+    const variant = form.variants[vIndex];
     for (let valIndex = 0; valIndex < variant.values.length; valIndex++) {
-      if (isDuplicateValue(vIndex, valIndex)) return true
-      if (variant.isColor && isDuplicateColor(vIndex, valIndex)) return true
+      if (isDuplicateValue(vIndex, valIndex)) return true;
+      if (variant.isColor && isDuplicateColor(vIndex, valIndex)) return true;
     }
   }
-  return false
-})
+  return false;
+});
 
 const filteredProducts = computed(() => {
-  if (!searchQuery.value) return productsStore.products
-  const query = searchQuery.value.toLowerCase()
-  return productsStore.products.filter((p) => 
-    p.name.toLowerCase().includes(query) ||
-    (p.nameEn && p.nameEn.toLowerCase().includes(query))
-  )
-})
+  if (!searchQuery.value) return productsStore.products;
+  const query = searchQuery.value.toLowerCase();
+  return productsStore.products.filter(
+    (p) =>
+      p.name.toLowerCase().includes(query) ||
+      (p.nameEn && p.nameEn.toLowerCase().includes(query))
+  );
+});
 
 function getFirstImageUrl(product: Product): string {
   if (!product.images || product.images.length === 0) {
-    return product.image || '/placeholder.jpg'
+    return product.image || "/placeholder.jpg";
   }
-  const firstImage = product.images[0]
-  return typeof firstImage === 'string' ? firstImage : firstImage.url
+  const firstImage = product.images[0];
+  return typeof firstImage === "string" ? firstImage : firstImage.url;
 }
 
 function getProductImages(product: Product): FormImage[] {
-  if (!product.images) return []
+  if (!product.images) return [];
   if (Array.isArray(product.images)) {
-    return product.images.map(img => {
-      const url = typeof img === 'string' ? img : img.url
+    return product.images.map((img) => {
+      const url = typeof img === "string" ? img : img.url;
       // Check if position data exists (stored as positionX, positionY in Firestore)
-      const position = typeof img === 'object' && 'positionX' in img 
-        ? { x: (img as { positionX?: number }).positionX || 50, y: (img as { positionY?: number }).positionY || 50 }
-        : { x: 50, y: 50 }
+      const position =
+        typeof img === "object" && "positionX" in img
+          ? {
+              x: (img as { positionX?: number }).positionX || 50,
+              y: (img as { positionY?: number }).positionY || 50,
+            }
+          : { x: 50, y: 50 };
       // Load linked variants
-      const linkedVariants = typeof img === 'object' && 'linkedVariants' in img
-        ? (img as { linkedVariants?: LinkedVariant[] }).linkedVariants || []
-        : []
-      return { url, position, linkedVariants }
-    })
+      const linkedVariants =
+        typeof img === "object" && "linkedVariants" in img
+          ? (img as { linkedVariants?: LinkedVariant[] }).linkedVariants || []
+          : [];
+      return { url, position, linkedVariants };
+    });
   }
-  return []
+  return [];
 }
 
 function getProductVariants(product: Product): FormVariant[] {
-  if (!product.variants) return []
-  
+  if (!product.variants) return [];
+
   // Handle array format (Variant[])
   if (Array.isArray(product.variants)) {
     return product.variants.map((v) => ({
-      name: v.name || '',
+      name: v.name || "",
       isColor: v.isColor || false,
       values: (v.values || []).map((val) => {
-        if (typeof val === 'string') {
-          return { value: val, colorHex: '', priceModifier: 0 }
+        if (typeof val === "string") {
+          return { value: val, colorHex: "", priceModifier: 0 };
         }
-        return { 
-          value: val.value || '', 
-          colorHex: val.colorHex || '', 
-          priceModifier: val.priceModifier || 0 
-        }
-      })
-    }))
+        return {
+          value: val.value || "",
+          colorHex: val.colorHex || "",
+          priceModifier: val.priceModifier || 0,
+        };
+      }),
+    }));
   }
-  
+
   // Handle object format { variantName: VariantValue[] }
   return Object.entries(product.variants).map(([name, values]) => ({
     name,
-    isColor: name.toLowerCase().includes('color') || name.toLowerCase().includes('boja'),
+    isColor:
+      name.toLowerCase().includes("color") ||
+      name.toLowerCase().includes("boja"),
     values: values.map((val) => {
-      if (typeof val === 'string') {
-        return { value: val, colorHex: '', priceModifier: 0 }
+      if (typeof val === "string") {
+        return { value: val, colorHex: "", priceModifier: 0 };
       }
-      return { 
-        value: val.value || '', 
-        colorHex: val.colorHex || '', 
-        priceModifier: val.priceModifier || 0 
-      }
-    })
-  }))
+      return {
+        value: val.value || "",
+        colorHex: val.colorHex || "",
+        priceModifier: val.priceModifier || 0,
+      };
+    }),
+  }));
 }
 
 function openProductModal(product?: Product) {
   if (product) {
-    editingProduct.value = product
+    editingProduct.value = product;
     Object.assign(form, {
       name: product.name,
-      nameEn: product.nameEn || '',
-      description: product.description || '',
-      descriptionEn: product.descriptionEn || '',
+      nameEn: product.nameEn || "",
+      description: product.description || "",
+      descriptionEn: product.descriptionEn || "",
       price: product.price,
       stock: product.stock || 0,
       featured: product.featured || false,
       images: getProductImages(product),
-      variants: getProductVariants(product)
-    })
-    mainImageIndex.value = 0
+      variants: getProductVariants(product),
+    });
+    mainImageIndex.value = 0;
   } else {
-    editingProduct.value = null
-    Object.assign(form, defaultForm())
-    mainImageIndex.value = 0
+    editingProduct.value = null;
+    Object.assign(form, defaultForm());
+    mainImageIndex.value = 0;
   }
-  activeTab.value = 'basic'
-  showModal.value = true
+  activeTab.value = "basic";
+  showModal.value = true;
 }
 
 function closeModal() {
-  showModal.value = false
-  editingProduct.value = null
+  showModal.value = false;
+  editingProduct.value = null;
 }
 
 function duplicateProduct(product: Product) {
   // Create a copy without editingProduct so it creates a new product
-  editingProduct.value = null
+  editingProduct.value = null;
   Object.assign(form, {
     name: `${product.name} (Copy)`,
-    nameEn: product.nameEn ? `${product.nameEn} (Copy)` : '',
-    description: product.description || '',
-    descriptionEn: product.descriptionEn || '',
+    nameEn: product.nameEn ? `${product.nameEn} (Copy)` : "",
+    description: product.description || "",
+    descriptionEn: product.descriptionEn || "",
     price: product.price,
     stock: product.stock || 0,
     featured: false,
     images: getProductImages(product),
-    variants: getProductVariants(product)
-  })
-  mainImageIndex.value = 0
-  activeTab.value = 'basic'
-  showModal.value = true
+    variants: getProductVariants(product),
+  });
+  mainImageIndex.value = 0;
+  activeTab.value = "basic";
+  showModal.value = true;
 }
 
 function triggerFileInput() {
-  fileInput.value?.click()
+  fileInput.value?.click();
 }
 
 async function handleFileSelect(event: Event) {
-  const target = event.target as HTMLInputElement
+  const target = event.target as HTMLInputElement;
   if (target.files) {
-    await uploadFiles(Array.from(target.files))
+    await uploadFiles(Array.from(target.files));
   }
 }
 
 async function handleDrop(event: DragEvent) {
   if (event.dataTransfer?.files) {
-    await uploadFiles(Array.from(event.dataTransfer.files))
+    await uploadFiles(Array.from(event.dataTransfer.files));
   }
 }
 
 async function uploadFiles(files: File[]) {
-  uploadingImages.value = true
+  uploadingImages.value = true;
   try {
     for (const file of files) {
-      const url = await productsStore.uploadImage(file)
-      form.images.push({ url, position: { x: 50, y: 50 }, linkedVariants: [] })
+      const url = await productsStore.uploadImage(file);
+      form.images.push({ url, position: { x: 50, y: 50 }, linkedVariants: [] });
     }
-    showToast(t('admin.imagesUploaded'), 'success')
+    showToast(t("admin.imagesUploaded"), "success");
   } catch (error) {
-    showToast(t('admin.uploadError'), 'error')
+    showToast(t("admin.uploadError"), "error");
   } finally {
-    uploadingImages.value = false
+    uploadingImages.value = false;
   }
 }
 
 function removeImage(index: number) {
-  form.images.splice(index, 1)
+  form.images.splice(index, 1);
   // Adjust main image index if needed
   if (mainImageIndex.value >= form.images.length) {
-    mainImageIndex.value = Math.max(0, form.images.length - 1)
+    mainImageIndex.value = Math.max(0, form.images.length - 1);
   } else if (index < mainImageIndex.value) {
-    mainImageIndex.value--
+    mainImageIndex.value--;
   } else if (index === mainImageIndex.value && form.images.length > 0) {
-    mainImageIndex.value = 0
+    mainImageIndex.value = 0;
   }
 }
 
 function setMainImage(index: number) {
-  mainImageIndex.value = index
+  mainImageIndex.value = index;
 }
 
 function moveImage(index: number, direction: number) {
-  const newIndex = index + direction
-  if (newIndex < 0 || newIndex >= form.images.length) return
-  
+  const newIndex = index + direction;
+  if (newIndex < 0 || newIndex >= form.images.length) return;
+
   // Swap images
-  const temp = form.images[index]
-  form.images[index] = form.images[newIndex]
-  form.images[newIndex] = temp
-  
+  const temp = form.images[index];
+  form.images[index] = form.images[newIndex];
+  form.images[newIndex] = temp;
+
   // Update main image index if it was moved
   if (mainImageIndex.value === index) {
-    mainImageIndex.value = newIndex
+    mainImageIndex.value = newIndex;
   } else if (mainImageIndex.value === newIndex) {
-    mainImageIndex.value = index
+    mainImageIndex.value = index;
   }
 }
 
 function openPositionEditor(index: number) {
-  positionEditorIndex.value = index
+  positionEditorIndex.value = index;
 }
 
 function closePositionEditor() {
-  positionEditorIndex.value = null
+  positionEditorIndex.value = null;
 }
 
 function handlePositionClick(event: MouseEvent) {
-  if (positionEditorIndex.value === null) return
-  
-  const img = event.target as HTMLImageElement
-  const rect = img.getBoundingClientRect()
-  
-  const x = Math.round(((event.clientX - rect.left) / rect.width) * 100)
-  const y = Math.round(((event.clientY - rect.top) / rect.height) * 100)
-  
+  if (positionEditorIndex.value === null) return;
+
+  const img = event.target as HTMLImageElement;
+  const rect = img.getBoundingClientRect();
+
+  const x = Math.round(((event.clientX - rect.left) / rect.width) * 100);
+  const y = Math.round(((event.clientY - rect.top) / rect.height) * 100);
+
   form.images[positionEditorIndex.value].position = {
     x: Math.max(0, Math.min(100, x)),
-    y: Math.max(0, Math.min(100, y))
-  }
+    y: Math.max(0, Math.min(100, y)),
+  };
 }
 
 function resetPosition() {
-  if (positionEditorIndex.value === null) return
-  form.images[positionEditorIndex.value].position = { x: 50, y: 50 }
+  if (positionEditorIndex.value === null) return;
+  form.images[positionEditorIndex.value].position = { x: 50, y: 50 };
 }
 
 // Variant Linker functions
 function openVariantLinker(imageIndex: number) {
-  variantLinkerIndex.value = imageIndex
+  variantLinkerIndex.value = imageIndex;
 }
 
 function closeVariantLinker() {
-  variantLinkerIndex.value = null
+  variantLinkerIndex.value = null;
 }
 
-function isVariantLinked(imageIndex: number, variantType: string, variantValue: string): boolean {
-  const image = form.images[imageIndex]
-  return image.linkedVariants.some(lv => lv.type === variantType && lv.value === variantValue)
+function isVariantLinked(
+  imageIndex: number,
+  variantType: string,
+  variantValue: string
+): boolean {
+  const image = form.images[imageIndex];
+  return image.linkedVariants.some(
+    (lv) => lv.type === variantType && lv.value === variantValue
+  );
 }
 
-function toggleVariantLink(imageIndex: number, variantType: string, variantValue: string) {
-  const image = form.images[imageIndex]
-  const existingIndex = image.linkedVariants.findIndex(lv => lv.type === variantType && lv.value === variantValue)
-  
+function toggleVariantLink(
+  imageIndex: number,
+  variantType: string,
+  variantValue: string
+) {
+  const image = form.images[imageIndex];
+  const existingIndex = image.linkedVariants.findIndex(
+    (lv) => lv.type === variantType && lv.value === variantValue
+  );
+
   if (existingIndex >= 0) {
-    image.linkedVariants.splice(existingIndex, 1)
+    image.linkedVariants.splice(existingIndex, 1);
   } else {
-    image.linkedVariants.push({ type: variantType, value: variantValue })
+    image.linkedVariants.push({ type: variantType, value: variantValue });
   }
 }
 
 function clearVariantLinks(imageIndex: number) {
-  form.images[imageIndex].linkedVariants = []
+  form.images[imageIndex].linkedVariants = [];
 }
 
 function getLinkedVariantsTitle(image: FormImage): string {
-  if (image.linkedVariants.length === 0) return ''
-  return image.linkedVariants.map(lv => `${lv.type}: ${lv.value}`).join(', ')
+  if (image.linkedVariants.length === 0) return "";
+  return image.linkedVariants.map((lv) => `${lv.type}: ${lv.value}`).join(", ");
 }
 
 function addVariant() {
   form.variants.push({
-    name: '',
+    name: "",
     isColor: false,
-    values: [{ value: '', colorHex: '#000000', priceModifier: 0 }]
-  })
+    values: [{ value: "", colorHex: "#000000", priceModifier: 0 }],
+  });
 }
 
 function removeVariant(index: number) {
-  form.variants.splice(index, 1)
+  form.variants.splice(index, 1);
 }
 
 function addVariantValue(variantIndex: number) {
-  const isColor = form.variants[variantIndex].isColor
-  form.variants[variantIndex].values.push({ 
-    value: '', 
-    colorHex: isColor ? '#000000' : '', 
-    priceModifier: 0 
-  })
+  const isColor = form.variants[variantIndex].isColor;
+  form.variants[variantIndex].values.push({
+    value: "",
+    colorHex: isColor ? "#000000" : "",
+    priceModifier: 0,
+  });
 }
 
 function removeVariantValue(variantIndex: number, valueIndex: number) {
-  form.variants[variantIndex].values.splice(valueIndex, 1)
+  form.variants[variantIndex].values.splice(valueIndex, 1);
 }
 
 async function saveProduct() {
-  saving.value = true
-  
+  saving.value = true;
+
   try {
     // Reorder images so main image is first
-    const reorderedImages = [...form.images]
-    if (mainImageIndex.value > 0 && mainImageIndex.value < reorderedImages.length) {
-      const mainImage = reorderedImages.splice(mainImageIndex.value, 1)[0]
-      reorderedImages.unshift(mainImage)
+    const reorderedImages = [...form.images];
+    if (
+      mainImageIndex.value > 0 &&
+      mainImageIndex.value < reorderedImages.length
+    ) {
+      const mainImage = reorderedImages.splice(mainImageIndex.value, 1)[0];
+      reorderedImages.unshift(mainImage);
     }
-    
+
     // Convert FormImage[] to saveable format with position data and linked variants
-    const imagesToSave: ProductImage[] = reorderedImages.map(img => {
+    const imagesToSave: ProductImage[] = reorderedImages.map((img) => {
       const imageData: ProductImage = {
         url: img.url,
         positionX: img.position.x,
-        positionY: img.position.y
-      }
+        positionY: img.position.y,
+      };
       if (img.linkedVariants && img.linkedVariants.length > 0) {
-        imageData.linkedVariants = img.linkedVariants
+        imageData.linkedVariants = img.linkedVariants;
       }
-      return imageData
-    })
-    
+      return imageData;
+    });
+
     const productData = {
       name: form.name,
       nameEn: form.nameEn,
@@ -1103,58 +1361,66 @@ async function saveProduct() {
       price: form.price,
       stock: form.stock,
       featured: form.featured,
-      image: imagesToSave.length > 0 ? imagesToSave[0].url : '',
+      image: imagesToSave.length > 0 ? imagesToSave[0].url : "",
       images: imagesToSave,
-      variants: form.variants.filter(v => v.name && v.values.length).map(v => ({
-        name: v.name,
-        isColor: v.isColor,
-        values: v.values.filter(val => val.value).map(val => {
-          const variantValue: { value: string; priceModifier: number; colorHex?: string } = {
-            value: val.value,
-            priceModifier: val.priceModifier || 0
-          }
-          // Only include colorHex if it's a color variant and has a value
-          if (v.isColor && val.colorHex) {
-            variantValue.colorHex = val.colorHex
-          }
-          return variantValue
-        })
-      }))
-    }
-    
+      variants: form.variants
+        .filter((v) => v.name && v.values.length)
+        .map((v) => ({
+          name: v.name,
+          isColor: v.isColor,
+          values: v.values
+            .filter((val) => val.value)
+            .map((val) => {
+              const variantValue: {
+                value: string;
+                priceModifier: number;
+                colorHex?: string;
+              } = {
+                value: val.value,
+                priceModifier: val.priceModifier || 0,
+              };
+              // Only include colorHex if it's a color variant and has a value
+              if (v.isColor && val.colorHex) {
+                variantValue.colorHex = val.colorHex;
+              }
+              return variantValue;
+            }),
+        })),
+    };
+
     if (editingProduct.value) {
-      await productsStore.updateProduct(editingProduct.value.id, productData)
-      showToast(t('admin.productUpdated'), 'success')
+      await productsStore.updateProduct(editingProduct.value.id, productData);
+      showToast(t("admin.productUpdated"), "success");
     } else {
-      await productsStore.createProduct(productData)
-      showToast(t('admin.productCreated'), 'success')
+      await productsStore.createProduct(productData);
+      showToast(t("admin.productCreated"), "success");
     }
-    
-    closeModal()
+
+    closeModal();
   } catch (error) {
-    console.error('Error saving product:', error)
-    showToast(t('admin.saveError'), 'error')
+    console.error("Error saving product:", error);
+    showToast(t("admin.saveError"), "error");
   } finally {
-    saving.value = false
+    saving.value = false;
   }
 }
 
 function confirmDelete(product: Product) {
-  productToDelete.value = product
+  productToDelete.value = product;
 }
 
 async function deleteProduct() {
-  if (!productToDelete.value) return
-  
-  deleting.value = true
+  if (!productToDelete.value) return;
+
+  deleting.value = true;
   try {
-    await productsStore.deleteProduct(productToDelete.value.id)
-    showToast(t('admin.productDeleted'), 'success')
-    productToDelete.value = null
+    await productsStore.deleteProduct(productToDelete.value.id);
+    showToast(t("admin.productDeleted"), "success");
+    productToDelete.value = null;
   } catch (error) {
-    showToast(t('admin.deleteError'), 'error')
+    showToast(t("admin.deleteError"), "error");
   } finally {
-    deleting.value = false
+    deleting.value = false;
   }
 }
 </script>
@@ -1173,7 +1439,7 @@ async function deleteProduct() {
   position: relative;
   flex: 1;
   max-width: 300px;
-  
+
   i {
     position: absolute;
     left: 1rem;
@@ -1181,7 +1447,7 @@ async function deleteProduct() {
     transform: translateY(-50%);
     color: var(--muted-color);
   }
-  
+
   input {
     padding-left: 2.5rem;
   }
@@ -1198,12 +1464,13 @@ async function deleteProduct() {
   border: 1px solid var(--border-color);
   border-radius: 12px;
   overflow: hidden;
-  transition: transform var(--transition-speed), box-shadow var(--transition-speed);
-  
+  transition: transform var(--transition-speed),
+    box-shadow var(--transition-speed);
+
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    
+
     .product-actions {
       opacity: 1;
     }
@@ -1214,7 +1481,7 @@ async function deleteProduct() {
   position: relative;
   aspect-ratio: 3 / 4;
   overflow: hidden;
-  
+
   img {
     width: 100%;
     height: 100%;
@@ -1234,7 +1501,7 @@ async function deleteProduct() {
 
 .product-info {
   padding: 1rem;
-  
+
   h3 {
     font-size: 1rem;
     margin-bottom: 0.5rem;
@@ -1261,12 +1528,12 @@ async function deleteProduct() {
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
-  
+
   &.in-stock {
     background: rgba(16, 185, 129, 0.2);
     color: #34d399;
   }
-  
+
   &.out-of-stock {
     background: rgba(239, 68, 68, 0.2);
     color: #f87171;
@@ -1327,7 +1594,7 @@ async function deleteProduct() {
   display: flex;
   border-bottom: 1px solid var(--border-color);
   padding: 0 1.5rem;
-  
+
   .tab {
     padding: 1rem 1.5rem;
     background: none;
@@ -1336,16 +1603,16 @@ async function deleteProduct() {
     cursor: pointer;
     position: relative;
     transition: color var(--transition-speed);
-    
+
     &:hover {
       color: var(--text-color);
     }
-    
+
     &.active {
       color: var(--primary-color);
-      
+
       &::after {
-        content: '';
+        content: "";
         position: absolute;
         bottom: -1px;
         left: 0;
@@ -1365,7 +1632,7 @@ async function deleteProduct() {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
-  
+
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
   }
@@ -1387,24 +1654,25 @@ async function deleteProduct() {
   padding: 3rem;
   text-align: center;
   cursor: pointer;
-  transition: border-color var(--transition-speed), background var(--transition-speed);
-  
+  transition: border-color var(--transition-speed),
+    background var(--transition-speed);
+
   &:hover {
     border-color: var(--primary-color);
     background: rgba(99, 102, 241, 0.05);
   }
-  
+
   i {
     font-size: 3rem;
     color: var(--muted-color);
     margin-bottom: 1rem;
   }
-  
+
   p {
     font-weight: 500;
     margin-bottom: 0.5rem;
   }
-  
+
   span {
     font-size: 0.875rem;
     color: var(--muted-color);
@@ -1423,13 +1691,13 @@ async function deleteProduct() {
   aspect-ratio: 3 / 4;
   border-radius: 8px;
   overflow: hidden;
-  
+
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
-  
+
   .remove-image {
     position: absolute;
     top: 0.5rem;
@@ -1446,7 +1714,7 @@ async function deleteProduct() {
     justify-content: center;
     font-size: 0.75rem;
   }
-  
+
   .main-badge {
     position: absolute;
     top: 0.5rem;
@@ -1459,7 +1727,7 @@ async function deleteProduct() {
     font-weight: 600;
     text-transform: uppercase;
   }
-  
+
   .image-controls {
     position: absolute;
     bottom: 0;
@@ -1473,11 +1741,11 @@ async function deleteProduct() {
     opacity: 0;
     transition: opacity 0.2s ease;
   }
-  
+
   &:hover .image-controls {
     opacity: 1;
   }
-  
+
   .control-btn {
     width: 28px;
     height: 28px;
@@ -1491,25 +1759,26 @@ async function deleteProduct() {
     justify-content: center;
     font-size: 0.7rem;
     transition: all 0.2s ease;
-    
+
     &:hover:not(:disabled) {
       background: rgba(255, 255, 255, 0.3);
     }
-    
+
     &:disabled {
       opacity: 0.3;
       cursor: not-allowed;
     }
-    
+
     &.set-main {
       color: rgba(255, 255, 255, 0.6);
-      
-      &.active, &:hover:not(:disabled) {
+
+      &.active,
+      &:hover:not(:disabled) {
         color: #fbbf24;
       }
     }
   }
-  
+
   &.is-main {
     box-shadow: 0 0 0 3px var(--primary-color);
   }
@@ -1554,12 +1823,12 @@ async function deleteProduct() {
   align-items: center;
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--border-color);
-  
+
   h4 {
     margin: 0;
     font-size: 1.125rem;
   }
-  
+
   .btn-close {
     background: transparent;
     border: none;
@@ -1567,7 +1836,7 @@ async function deleteProduct() {
     cursor: pointer;
     padding: 0.5rem;
     font-size: 1rem;
-    
+
     &:hover {
       color: var(--text-color);
     }
@@ -1589,7 +1858,7 @@ async function deleteProduct() {
   gap: 1.5rem;
   padding: 1.5rem;
   overflow-y: auto;
-  
+
   @media (max-width: 600px) {
     grid-template-columns: 1fr;
   }
@@ -1597,7 +1866,7 @@ async function deleteProduct() {
 
 .position-editor-original {
   position: relative;
-  
+
   .label {
     display: block;
     font-size: 0.75rem;
@@ -1605,14 +1874,14 @@ async function deleteProduct() {
     color: var(--muted-color);
     margin-bottom: 0.5rem;
   }
-  
+
   img {
     width: 100%;
     height: auto;
     border-radius: 8px;
     cursor: crosshair;
   }
-  
+
   .focal-point {
     position: absolute;
     width: 20px;
@@ -1634,14 +1903,14 @@ async function deleteProduct() {
     color: var(--muted-color);
     margin-bottom: 0.5rem;
   }
-  
+
   .preview-frame {
     width: 100%;
     aspect-ratio: 3 / 4;
     border-radius: 8px;
     overflow: hidden;
     background: rgba(0, 0, 0, 0.3);
-    
+
     img {
       width: 100%;
       height: 100%;
@@ -1682,7 +1951,7 @@ async function deleteProduct() {
   margin: 0 auto 1.5rem;
   border-radius: 8px;
   overflow: hidden;
-  
+
   img {
     width: 100%;
     height: 100%;
@@ -1730,27 +1999,27 @@ async function deleteProduct() {
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   input {
     display: none;
   }
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.1);
   }
-  
+
   &.checked {
     background: rgba(var(--primary-rgb), 0.2);
     border-color: var(--primary-color);
   }
-  
+
   .color-swatch {
     width: 18px;
     height: 18px;
     border-radius: 50%;
     border: 2px solid rgba(255, 255, 255, 0.3);
   }
-  
+
   .value-label {
     font-size: 0.875rem;
   }
@@ -1769,7 +2038,7 @@ async function deleteProduct() {
   display: flex;
   align-items: center;
   gap: 3px;
-  
+
   i {
     font-size: 0.6rem;
   }
@@ -1807,7 +2076,7 @@ async function deleteProduct() {
   gap: 1rem;
   align-items: center;
   margin-bottom: 0;
-  
+
   input {
     flex: 1;
   }
@@ -1835,16 +2104,23 @@ async function deleteProduct() {
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
-  
+
   &.has-error {
     animation: shake 0.3s ease-in-out;
   }
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  75% { transform: translateX(4px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
 }
 
 .value-input-wrapper,
@@ -1862,11 +2138,11 @@ async function deleteProduct() {
 .value-input {
   flex: 1;
   min-width: 120px;
-  
+
   &.input-error {
     border-color: #ef4444 !important;
     background: rgba(239, 68, 68, 0.1);
-    
+
     &:focus {
       box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
     }
@@ -1893,7 +2169,7 @@ async function deleteProduct() {
   font-weight: 500;
   white-space: nowrap;
   pointer-events: none;
-  
+
   i {
     font-size: 0.8rem;
   }
@@ -1906,7 +2182,7 @@ async function deleteProduct() {
   color: #fbbf24;
   font-size: 0.875rem;
   margin-right: auto;
-  
+
   i {
     font-size: 1rem;
   }
@@ -1925,11 +2201,11 @@ async function deleteProduct() {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   cursor: pointer;
-  
+
   &::-webkit-color-swatch-wrapper {
     padding: 2px;
   }
-  
+
   &::-webkit-color-swatch {
     border-radius: 4px;
     border: none;
@@ -1954,7 +2230,7 @@ async function deleteProduct() {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:hover {
     border-color: var(--primary-color);
     transform: scale(1.05);
@@ -1979,7 +2255,7 @@ async function deleteProduct() {
   margin-bottom: 0.75rem;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--border-color);
-  
+
   &:last-of-type {
     margin-bottom: 0;
     padding-bottom: 0;
@@ -2001,11 +2277,11 @@ async function deleteProduct() {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   cursor: pointer;
-  
+
   &::-webkit-color-swatch-wrapper {
     padding: 4px;
   }
-  
+
   &::-webkit-color-swatch {
     border-radius: 4px;
     border: none;
@@ -2026,18 +2302,18 @@ async function deleteProduct() {
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-  
+
   &:hover {
     transform: scale(1.15);
     border-color: white;
     z-index: 1;
-    
+
     .preset-tooltip {
       opacity: 1;
       visibility: visible;
     }
   }
-  
+
   .preset-tooltip {
     position: absolute;
     bottom: 100%;
@@ -2081,7 +2357,7 @@ async function deleteProduct() {
   gap: 0.5rem;
   font-size: 0.875rem;
   margin-top: 0.75rem;
-  
+
   &:hover {
     background: var(--primary-color-hover);
   }
@@ -2127,12 +2403,12 @@ async function deleteProduct() {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   transition: all 0.2s ease;
   z-index: 500;
-  
+
   span {
     font-size: 0.65rem;
     font-weight: 600;
   }
-  
+
   &:hover {
     transform: scale(1.1);
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
@@ -2163,23 +2439,23 @@ async function deleteProduct() {
   padding: 0.75rem;
   background: rgba(255, 255, 255, 0.03);
   border-radius: 8px;
-  
+
   .preset-color-preview {
     width: 36px;
     height: 36px;
   }
-  
+
   .preset-info {
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 2px;
   }
-  
+
   .preset-name {
     font-weight: 500;
   }
-  
+
   .preset-hex {
     font-size: 0.75rem;
     font-family: monospace;
@@ -2218,7 +2494,7 @@ async function deleteProduct() {
   border-radius: 12px;
   width: 100%;
   max-width: 400px;
-  
+
   .modal-body {
     padding: 1.5rem;
   }
@@ -2227,13 +2503,13 @@ async function deleteProduct() {
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  
+
   i {
     font-size: 4rem;
     color: var(--muted-color);
     margin-bottom: 1rem;
   }
-  
+
   p {
     color: var(--muted-color);
     margin-bottom: 1.5rem;
@@ -2253,16 +2529,16 @@ async function deleteProduct() {
   color: var(--text-color);
   cursor: pointer;
   transition: all var(--transition-speed);
-  
+
   &:hover {
     background: var(--card-bg-hover);
   }
-  
+
   &.btn-danger {
     background: rgba(239, 68, 68, 0.1);
     border-color: transparent;
     color: #f87171;
-    
+
     &:hover {
       background: rgba(239, 68, 68, 0.2);
     }
