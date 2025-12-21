@@ -80,9 +80,11 @@ export async function sendCustomerEmail(data: OrderEmailData): Promise<boolean> 
  */
 export async function sendAdminEmail(data: OrderEmailData): Promise<boolean> {
   if (!EMAILJS_CONFIG.serviceId || !EMAILJS_CONFIG.adminTemplateId) {
-    console.warn('EmailJS admin template not configured')
+    console.warn('EmailJS admin template not configured. Service:', EMAILJS_CONFIG.serviceId, 'Template:', EMAILJS_CONFIG.adminTemplateId)
     return false
   }
+
+  console.log('Sending admin email to:', EMAILJS_CONFIG.adminEmail)
 
   // Format orders array for template loop
   const orders = data.items.map(item => ({
@@ -94,6 +96,8 @@ export async function sendAdminEmail(data: OrderEmailData): Promise<boolean> {
 
   try {
     await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.adminTemplateId, {
+      to_email: EMAILJS_CONFIG.adminEmail,
+      email: EMAILJS_CONFIG.adminEmail,
       order_id: data.orderNumber,
       orders: orders,
       cost: {
@@ -101,7 +105,6 @@ export async function sendAdminEmail(data: OrderEmailData): Promise<boolean> {
         tax: (data.tax || 0).toFixed(2),
         total: data.total.toFixed(2)
       },
-      email: EMAILJS_CONFIG.adminEmail,
       // Additional admin-specific fields
       order_date: new Date().toLocaleDateString('sr-RS'),
       customer_name: data.customerName,
@@ -110,6 +113,7 @@ export async function sendAdminEmail(data: OrderEmailData): Promise<boolean> {
       customer_address: `${data.customerAddress}, ${data.customerCity} ${data.customerZip}`,
       customer_notes: data.notes || 'Nema napomena'
     })
+    console.log('Admin email sent successfully')
     return true
   } catch (error) {
     console.error('Failed to send admin email:', error)
