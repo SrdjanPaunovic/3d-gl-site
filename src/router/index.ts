@@ -23,6 +23,11 @@ const routes: RouteRecordRaw[] = [
     name: 'checkout',
     component: () => import('@/views/CheckoutPage.vue')
   },
+  {
+    path: '/order',
+    name: 'order-tracking',
+    component: () => import('@/views/OrderTrackingPage.vue')
+  },
   
   // Admin routes
   {

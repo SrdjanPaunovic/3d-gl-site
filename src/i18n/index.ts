@@ -40,7 +40,7 @@ const translations: Record<string, Translations> = {
       empty: 'Vaša korpa je prazna',
       emptyMessage: 'Izgleda da još niste dodali proizvode u korpu.',
       continueShopping: 'Nastavi kupovinu',
-      checkout: 'Nastavi na plaćanje',
+      checkout: 'Nastavi',
       total: 'Ukupno:',
       remove: 'Ukloni'
     },

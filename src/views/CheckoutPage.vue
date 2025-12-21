@@ -28,6 +28,25 @@
       <div v-else-if="!orderSuccess" class="checkout-content">
         <!-- Customer Information Form -->
         <div class="checkout-form-wrapper">
+          <!-- Saved Data Banner -->
+          <div v-if="hasSavedData && !savedDataApplied" class="saved-data-banner">
+            <div class="saved-data-content">
+              <i class="fas fa-user-check"></i>
+              <div>
+                <strong>Dobrodošli nazad!</strong>
+                <p>Pronašli smo vaše prethodno sačuvane podatke za dostavu.</p>
+              </div>
+            </div>
+            <div class="saved-data-actions">
+              <button type="button" class="btn btn-primary btn-sm" @click="applySavedData">
+                <i class="fas fa-check"></i> Koristi sačuvane podatke
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm" @click="dismissSavedData">
+                Unesi nove
+              </button>
+            </div>
+          </div>
+
           <form class="checkout-form" @submit.prevent="submitOrder">
             <div class="form-section">
               <h3><i class="fas fa-user"></i> {{ t('checkout.customerInfo') }}</h3>
@@ -119,6 +138,19 @@
                   placeholder="Posebne instrukcije za dostavu..."
                 ></textarea>
               </div>
+            </div>
+
+            <!-- Remember Me Checkbox -->
+            <div class="remember-me-section">
+              <label class="checkbox-label">
+                <input type="checkbox" v-model="rememberData">
+                <span class="checkbox-custom"></span>
+                <span class="checkbox-text">
+                  <i class="fas fa-save"></i>
+                  Zapamti moje podatke za sledeću kupovinu
+                </span>
+              </label>
+              <p class="remember-me-note">Podaci se čuvaju samo na ovom uređaju</p>
             </div>
 
             <div class="payment-info">
@@ -222,12 +254,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import { useCartStore } from '@/stores/cart'
 import { useOrdersStore } from '@/stores/orders'
 import { useI18n } from '@/i18n'
 import { formatPrice } from '@/utils/format'
 import type { Customer } from '@/types'
+
+const STORAGE_KEY = '3dgadgets_customer_data'
 
 const cartStore = useCartStore()
 const ordersStore = useOrdersStore()
@@ -253,11 +287,66 @@ const error = ref<string | null>(null)
 const orderSuccess = ref(false)
 const orderNumber = ref('')
 
+// Saved data functionality
+const rememberData = ref(true)
+const hasSavedData = ref(false)
+const savedDataApplied = ref(false)
+const savedCustomerData = ref<Partial<Customer> | null>(null)
+
+function getSavedData(): Partial<Customer> | null {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      return JSON.parse(stored)
+    }
+  } catch (e) {
+    console.error('Error reading saved customer data:', e)
+  }
+  return null
+}
+
+function saveCustomerData() {
+  if (rememberData.value) {
+    // Don't save notes - they're usually order-specific
+    const dataToSave: Partial<Customer> = {
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      address: customer.address,
+      city: customer.city,
+      zip: customer.zip
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave))
+  }
+}
+
+function applySavedData() {
+  if (savedCustomerData.value) {
+    Object.assign(customer, savedCustomerData.value)
+    savedDataApplied.value = true
+  }
+}
+
+function dismissSavedData() {
+  savedDataApplied.value = true
+}
+
+onMounted(() => {
+  const saved = getSavedData()
+  if (saved && saved.name) {
+    savedCustomerData.value = saved
+    hasSavedData.value = true
+  }
+})
+
 async function submitOrder() {
   submitting.value = true
   error.value = null
 
   try {
+    // Save customer data if checkbox is checked
+    saveCustomerData()
+    
     const result = await ordersStore.createOrder(customer, cartStore.items, summary.value.total, summary.value.shipping)
     orderNumber.value = result.orderNumber
     orderSuccess.value = true
@@ -275,6 +364,134 @@ async function submitOrder() {
   flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+// Saved Data Banner
+.saved-data-banner {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.saved-data-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  
+  > i {
+    font-size: 1.5rem;
+    color: #22c55e;
+    margin-top: 0.25rem;
+  }
+  
+  strong {
+    display: block;
+    color: #16a34a;
+    margin-bottom: 0.25rem;
+  }
+  
+  p {
+    margin: 0;
+    color: var(--muted-color);
+    font-size: 0.9rem;
+  }
+}
+
+.saved-data-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted-color);
+    
+    &:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+  }
+}
+
+// Remember Me Section
+.remember-me-section {
+  padding: 1rem;
+  background: var(--bg-color, #f9f9f9);
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+  
+  input[type="checkbox"] {
+    display: none;
+  }
+}
+
+.checkbox-custom {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-radius: 4px;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  
+  &::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    color: #fff;
+    font-size: 12px;
+    transition: transform 0.2s ease;
+  }
+}
+
+input[type="checkbox"]:checked + .checkbox-custom {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  
+  &::after {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.checkbox-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  
+  i {
+    color: var(--primary-color);
+  }
+}
+
+.remember-me-note {
+  margin: 0.5rem 0 0 2rem;
+  font-size: 0.8rem;
+  color: var(--muted-color);
 }
 
 .page-header {
