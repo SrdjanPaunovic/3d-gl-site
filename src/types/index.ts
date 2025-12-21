@@ -95,6 +95,8 @@ export interface Order {
   orderNumber: string
   customer: Customer
   items: OrderItem[]
+  subtotal?: number
+  shipping?: number
   total: number
   status: 'pending' | 'approved' | 'completed' | 'cancelled'
   createdAt?: Date
