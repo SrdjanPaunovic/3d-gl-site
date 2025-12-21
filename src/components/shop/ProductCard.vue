@@ -1,6 +1,6 @@
 <template>
   <div class="product-card">
-    <div class="product-image-container">
+    <div class="product-image-container" @click="openLightbox">
       <img 
         :src="currentImage" 
         :alt="product.name" 
@@ -8,7 +8,10 @@
         :style="{ objectPosition: currentImagePosition }"
         loading="lazy"
       >
-      <div v-if="product.images?.length > 1" class="product-thumbnails">
+      <button class="zoom-btn" @click.stop="openLightbox" title="View larger">
+        <i class="fas fa-search-plus"></i>
+      </button>
+      <div v-if="product.images?.length > 1" class="product-thumbnails" @click.stop>
         <button
           v-for="(img, index) in product.images"
           :key="index"
@@ -25,6 +28,39 @@
         </button>
       </div>
     </div>
+    
+    <!-- Lightbox -->
+    <Teleport to="body">
+      <div v-if="showLightbox" class="lightbox-overlay">
+        <div class="lightbox-content" @click.stop>
+          <button class="lightbox-close" @click="closeLightbox">
+            <i class="fas fa-times"></i>
+          </button>
+          <button v-if="product.images?.length > 1" class="lightbox-nav prev" @click="prevImage">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <img 
+            :src="currentImage" 
+            :alt="product.name" 
+            class="lightbox-image"
+          >
+          <button v-if="product.images?.length > 1" class="lightbox-nav next" @click="nextImage">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+          <div v-if="product.images?.length > 1" class="lightbox-thumbnails">
+            <button
+              v-for="(img, index) in product.images"
+              :key="index"
+              class="lightbox-thumb"
+              :class="{ active: currentImageIndex === index }"
+              @click="currentImageIndex = index"
+            >
+              <img :src="getImageUrl(img)" :alt="`Thumbnail ${index + 1}`">
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
     
     <div class="product-info">
       <h3 class="product-name">{{ product.name }}</h3>
@@ -99,6 +135,34 @@ const { t } = useI18n()
 
 const currentImageIndex = ref(0)
 const selectedVariants = ref<SelectedVariants>({})
+const showLightbox = ref(false)
+
+// Lightbox functions
+function openLightbox() {
+  showLightbox.value = true
+  document.body.style.overflow = 'hidden'
+}
+
+function closeLightbox() {
+  showLightbox.value = false
+  document.body.style.overflow = ''
+}
+
+function prevImage() {
+  const images = props.product.images
+  if (!images?.length) return
+  currentImageIndex.value = currentImageIndex.value > 0 
+    ? currentImageIndex.value - 1 
+    : images.length - 1
+}
+
+function nextImage() {
+  const images = props.product.images
+  if (!images?.length) return
+  currentImageIndex.value = currentImageIndex.value < images.length - 1 
+    ? currentImageIndex.value + 1 
+    : 0
+}
 
 // Type guard to check if variants are in array format (Variant[])
 function isVariantArray(variants: Variant[] | Record<string, VariantValue[]>): variants is Variant[] {
@@ -277,6 +341,35 @@ function handleAddToCart(): void {
   aspect-ratio: 3 / 4;
   overflow: hidden;
   background: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+.zoom-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    background: var(--primary-color);
+    transform: scale(1.1);
+  }
+}
+
+.product-card:hover .zoom-btn {
+  opacity: 1;
 }
 
 .product-image {
@@ -431,6 +524,153 @@ function handleAddToCart(): void {
   
   span {
     font-weight: 600;
+  }
+}
+
+/* Lightbox */
+.lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.lightbox-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.lightbox-image {
+  max-width: 100%;
+  max-height: 75vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: -50px;
+  right: 0;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    background: var(--primary-color);
+    transform: translateY(-50%) scale(1.1);
+  }
+  
+  &.prev {
+    left: -70px;
+  }
+  
+  &.next {
+    right: -70px;
+  }
+}
+
+.lightbox-thumbnails {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.lightbox-thumb {
+  width: 60px;
+  height: 60px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+  opacity: 0.5;
+  transition: all 0.2s ease;
+  background: transparent;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  &:hover {
+    opacity: 0.8;
+  }
+  
+  &.active {
+    opacity: 1;
+    border-color: var(--primary-color);
+  }
+}
+
+@media (max-width: 768px) {
+  .lightbox-nav {
+    width: 40px;
+    height: 40px;
+    
+    &.prev {
+      left: 10px;
+    }
+    
+    &.next {
+      right: 10px;
+    }
+  }
+  
+  .lightbox-close {
+    top: 10px;
+    right: 10px;
+  }
+  
+  .lightbox-thumb {
+    width: 50px;
+    height: 50px;
   }
 }
 </style>

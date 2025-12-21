@@ -58,7 +58,7 @@
     </div>
 
     <!-- Product Modal -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+    <div v-if="showModal" class="modal-overlay">
       <div class="modal product-modal">
         <div class="modal-header">
           <h2>{{ editingProduct ? t('admin.editProduct') : t('admin.addProduct') }}</h2>
@@ -187,6 +187,15 @@
                   </button>
                   <button 
                     type="button" 
+                    class="control-btn link-variant-btn" 
+                    @click="openVariantLinker(index)"
+                    :class="{ active: image.linkedVariants.length > 0 }"
+                    title="Link to variants"
+                  >
+                    <i class="fas fa-link"></i>
+                  </button>
+                  <button 
+                    type="button" 
                     class="control-btn move-right" 
                     @click="moveImage(index, 1)"
                     :disabled="index === form.images.length - 1"
@@ -200,11 +209,14 @@
                   <i class="fas fa-times"></i>
                 </button>
                 <span v-if="index === mainImageIndex" class="main-badge">Main</span>
+                <span v-if="image.linkedVariants.length > 0" class="linked-badge" :title="getLinkedVariantsTitle(image)">
+                  <i class="fas fa-link"></i> {{ image.linkedVariants.length }}
+                </span>
               </div>
             </div>
             
             <!-- Position Editor Modal -->
-            <div v-if="positionEditorIndex !== null" class="position-editor-overlay" @click.self="closePositionEditor">
+            <div v-if="positionEditorIndex !== null" class="position-editor-overlay">
               <div class="position-editor">
                 <div class="position-editor-header">
                   <h4>Adjust Crop Position</h4>
@@ -250,6 +262,60 @@
               </div>
             </div>
             
+            <!-- Variant Linker Modal -->
+            <div v-if="variantLinkerIndex !== null" class="position-editor-overlay">
+              <div class="variant-linker">
+                <div class="position-editor-header">
+                  <h4>Link Image to Variants</h4>
+                  <button type="button" class="btn-close" @click="closeVariantLinker">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+                <p class="position-editor-hint">Select which variant options should show this image when selected</p>
+                
+                <div class="variant-linker-content">
+                  <div class="linker-image-preview">
+                    <img :src="form.images[variantLinkerIndex].url" alt="Image to link">
+                  </div>
+                  
+                  <div v-if="form.variants.length === 0" class="no-variants-message">
+                    No variants defined. Add variants in the Variants tab first.
+                  </div>
+                  
+                  <div v-else class="variant-options-list">
+                    <div v-for="variant in form.variants" :key="variant.name" class="linker-variant-group">
+                      <div class="linker-variant-name">{{ variant.name }}</div>
+                      <div class="linker-variant-values">
+                        <label 
+                          v-for="val in variant.values" 
+                          :key="val.value"
+                          class="linker-checkbox"
+                          :class="{ checked: isVariantLinked(variantLinkerIndex, variant.name, val.value) }"
+                        >
+                          <input 
+                            type="checkbox"
+                            :checked="isVariantLinked(variantLinkerIndex, variant.name, val.value)"
+                            @change="toggleVariantLink(variantLinkerIndex, variant.name, val.value)"
+                          >
+                          <span 
+                            v-if="variant.isColor && val.colorHex" 
+                            class="color-swatch"
+                            :style="{ backgroundColor: val.colorHex }"
+                          ></span>
+                          <span class="value-label">{{ val.value }}</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="position-editor-actions">
+                  <button type="button" class="btn btn-secondary" @click="clearVariantLinks(variantLinkerIndex)">Clear All</button>
+                  <button type="button" class="btn btn-primary" @click="closeVariantLinker">Done</button>
+                </div>
+              </div>
+            </div>
+            
             <div v-if="uploadingImages" class="upload-progress">
               <div class="spinner"></div>
               <span>{{ t('admin.uploading') }}...</span>
@@ -281,28 +347,86 @@
                 </div>
                 
                 <div class="variant-values">
-                  <div v-for="(val, valIndex) in variant.values" :key="valIndex" class="variant-value-item">
-                    <input 
-                      v-model="val.value" 
-                      type="text" 
-                      class="form-control value-input" 
-                      :placeholder="t('admin.value')"
-                    >
+                  <div v-for="(val, valIndex) in variant.values" :key="valIndex" class="variant-value-item" :class="{ 'has-error': isDuplicateValue(vIndex, valIndex) }">
+                    <div class="value-input-wrapper">
+                      <input 
+                        v-model="val.value" 
+                        type="text" 
+                        class="form-control value-input" 
+                        :class="{ 'input-error': isDuplicateValue(vIndex, valIndex) }"
+                        :placeholder="t('admin.value')"
+                      >
+                      <span v-if="isDuplicateValue(vIndex, valIndex)" class="error-tooltip">
+                        <i class="fas fa-exclamation-circle"></i>
+                        Duplikat
+                      </span>
+                    </div>
                     
                     <div v-if="variant.isColor" class="color-picker-wrapper">
-                      <input 
-                        v-model="val.colorHex" 
-                        type="color" 
-                        class="color-input"
-                        :title="t('admin.pickColor')"
-                      >
-                      <input 
-                        v-model="val.colorHex" 
-                        type="text" 
-                        class="form-control hex-input" 
-                        placeholder="#000000"
-                        maxlength="7"
-                      >
+                      <div class="color-preset-dropdown">
+                        <button 
+                          type="button" 
+                          class="color-preview-btn"
+                          :style="{ backgroundColor: val.colorHex || '#000000' }"
+                          @click="toggleColorDropdown(vIndex, valIndex)"
+                          title="Izaberi boju"
+                        ></button>
+                        <div 
+                          v-if="activeColorDropdown?.vIndex === vIndex && activeColorDropdown?.valIndex === valIndex" 
+                          class="color-dropdown"
+                        >
+                          <div class="color-dropdown-section">
+                            <div class="dropdown-label">Izaberi boju</div>
+                            <input 
+                              v-model="val.colorHex" 
+                              type="color" 
+                              class="color-input-large"
+                            >
+                          </div>
+                          <div v-if="colorPresets.length > 0" class="color-dropdown-section">
+                            <div class="dropdown-label">Sačuvane boje</div>
+                            <div class="preset-colors">
+                              <button
+                                v-for="preset in colorPresets"
+                                :key="preset.name"
+                                type="button"
+                                class="preset-color-btn"
+                                :style="{ backgroundColor: preset.hex }"
+                                :title="preset.name"
+                                @click="applyColorPreset(val, preset)"
+                              >
+                                <span class="preset-tooltip">{{ preset.name }}</span>
+                              </button>
+                            </div>
+                          </div>
+                          <div class="color-dropdown-section save-section">
+                            <button 
+                              type="button" 
+                              class="btn btn-sm btn-secondary save-preset-btn"
+                              @click="openSavePresetModal(val.colorHex, val.value)"
+                            >
+                              <i class="fas fa-save"></i> Sačuvaj kao preset
+                            </button>
+                          </div>
+                          <button type="button" class="close-dropdown-btn" @click="closeColorDropdown">
+                            <i class="fas fa-check"></i> Gotovo
+                          </button>
+                        </div>
+                      </div>
+                      <div class="hex-input-wrapper">
+                        <input 
+                          v-model="val.colorHex" 
+                          type="text" 
+                          class="form-control hex-input" 
+                          :class="{ 'input-error': isDuplicateColor(vIndex, valIndex) }"
+                          placeholder="#000000"
+                          maxlength="7"
+                        >
+                        <span v-if="isDuplicateColor(vIndex, valIndex)" class="error-tooltip">
+                          <i class="fas fa-exclamation-circle"></i>
+                          Ista boja
+                        </span>
+                      </div>
                     </div>
                     
                     <div class="price-modifier-wrapper">
@@ -336,10 +460,19 @@
           </div>
 
           <div class="modal-footer">
+            <span v-if="hasValidationErrors" class="validation-warning">
+              <i class="fas fa-exclamation-triangle"></i>
+              Ispravi duplikate pre čuvanja
+            </span>
             <button type="button" class="btn btn-secondary" @click="closeModal">
               {{ t('common.cancel') }}
             </button>
-            <button type="submit" class="btn btn-primary" :disabled="saving">
+            <button 
+              type="submit" 
+              class="btn btn-primary" 
+              :disabled="saving || hasValidationErrors"
+              :title="hasValidationErrors ? 'Ispravi duplikate pre čuvanja' : ''"
+            >
               <template v-if="saving">
                 <div class="spinner spinner-sm"></div>
               </template>
@@ -376,6 +509,87 @@
         </div>
       </div>
     </div>
+    
+    <!-- Save Color Preset Modal -->
+    <div v-if="showSavePresetModal" class="modal-overlay">
+      <div class="modal confirm-modal">
+        <div class="modal-header">
+          <h2>Sačuvaj boju kao preset</h2>
+          <button class="btn btn-icon" @click="closeSavePresetModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="preset-preview">
+            <div class="preset-color-preview" :style="{ backgroundColor: newPresetColor }"></div>
+            <span>{{ newPresetColor }}</span>
+          </div>
+          <div class="form-group">
+            <label>Naziv boje</label>
+            <input 
+              v-model="newPresetName" 
+              type="text" 
+              class="form-control" 
+              placeholder="npr. Tamno plava, Sunset Orange..."
+              @keyup.enter="saveColorPreset"
+            >
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" @click="closeSavePresetModal">
+            Otkaži
+          </button>
+          <button class="btn btn-primary" @click="saveColorPreset" :disabled="!newPresetName.trim()">
+            <i class="fas fa-save"></i> Sačuvaj
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Manage Color Presets Button (floating) -->
+    <button 
+      v-if="colorPresets.length > 0 && showModal && activeTab === 'variants'" 
+      class="manage-presets-btn"
+      @click="showManagePresetsModal = true"
+      title="Upravljaj presetima"
+    >
+      <i class="fas fa-palette"></i>
+      <span>{{ colorPresets.length }}</span>
+    </button>
+    
+    <!-- Manage Presets Modal -->
+    <div v-if="showManagePresetsModal" class="modal-overlay">
+      <div class="modal confirm-modal manage-presets-modal">
+        <div class="modal-header">
+          <h2>Sačuvane boje</h2>
+          <button class="btn btn-icon" @click="showManagePresetsModal = false">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div v-if="colorPresets.length === 0" class="empty-presets">
+            Nema sačuvanih boja
+          </div>
+          <div v-else class="presets-list">
+            <div v-for="(preset, index) in colorPresets" :key="preset.name" class="preset-list-item">
+              <div class="preset-color-preview" :style="{ backgroundColor: preset.hex }"></div>
+              <div class="preset-info">
+                <span class="preset-name">{{ preset.name }}</span>
+                <span class="preset-hex">{{ preset.hex }}</span>
+              </div>
+              <button type="button" class="btn btn-icon btn-sm btn-danger" @click="deleteColorPreset(index)">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" @click="showManagePresetsModal = false">
+            Zatvori
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -392,9 +606,15 @@ interface ImagePosition {
   y: number  // 0-100 percentage
 }
 
+interface LinkedVariant {
+  type: string
+  value: string
+}
+
 interface FormImage {
   url: string
   position: ImagePosition
+  linkedVariants: LinkedVariant[]
 }
 
 interface ProductForm {
@@ -415,6 +635,13 @@ interface FormVariant {
   values: VariantValue[]
 }
 
+interface ColorPreset {
+  name: string
+  hex: string
+}
+
+const PRESETS_STORAGE_KEY = 'color-presets'
+
 const productsStore = useProductsStore()
 const { t } = useI18n()
 const { showToast } = useToast()
@@ -431,6 +658,15 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const mainImageIndex = ref(0)
 const positionEditorIndex = ref<number | null>(null)
 const positionEditorImage = ref<HTMLImageElement | null>(null)
+const variantLinkerIndex = ref<number | null>(null)
+
+// Color preset state
+const colorPresets = ref<ColorPreset[]>([])
+const activeColorDropdown = ref<{ vIndex: number; valIndex: number } | null>(null)
+const showSavePresetModal = ref(false)
+const showManagePresetsModal = ref(false)
+const newPresetColor = ref('')
+const newPresetName = ref('')
 
 const defaultForm = (): ProductForm => ({
   name: '',
@@ -448,6 +684,117 @@ const form = reactive<ProductForm>(defaultForm())
 
 onMounted(async () => {
   await productsStore.fetchProducts()
+  loadColorPresets()
+})
+
+// Color preset functions
+function loadColorPresets() {
+  try {
+    const stored = localStorage.getItem(PRESETS_STORAGE_KEY)
+    if (stored) {
+      colorPresets.value = JSON.parse(stored)
+    }
+  } catch {
+    colorPresets.value = []
+  }
+}
+
+function saveColorPresetsToStorage() {
+  localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(colorPresets.value))
+}
+
+function toggleColorDropdown(vIndex: number, valIndex: number) {
+  if (activeColorDropdown.value?.vIndex === vIndex && activeColorDropdown.value?.valIndex === valIndex) {
+    activeColorDropdown.value = null
+  } else {
+    activeColorDropdown.value = { vIndex, valIndex }
+  }
+}
+
+function closeColorDropdown() {
+  activeColorDropdown.value = null
+}
+
+function applyColorPreset(val: VariantValue, preset: ColorPreset) {
+  val.colorHex = preset.hex
+  val.value = preset.name
+  closeColorDropdown()
+}
+
+function openSavePresetModal(colorHex: string, suggestedName: string) {
+  newPresetColor.value = colorHex || '#000000'
+  newPresetName.value = suggestedName || ''
+  showSavePresetModal.value = true
+}
+
+function closeSavePresetModal() {
+  showSavePresetModal.value = false
+  newPresetColor.value = ''
+  newPresetName.value = ''
+}
+
+function saveColorPreset() {
+  if (!newPresetName.value.trim()) return
+  
+  // Check if name already exists
+  const existingIndex = colorPresets.value.findIndex(p => p.name.toLowerCase() === newPresetName.value.toLowerCase())
+  if (existingIndex >= 0) {
+    // Update existing
+    colorPresets.value[existingIndex].hex = newPresetColor.value
+  } else {
+    // Add new
+    colorPresets.value.push({
+      name: newPresetName.value.trim(),
+      hex: newPresetColor.value
+    })
+  }
+  
+  saveColorPresetsToStorage()
+  showToast('Boja sačuvana kao preset', 'success')
+  closeSavePresetModal()
+  closeColorDropdown()
+}
+
+function deleteColorPreset(index: number) {
+  colorPresets.value.splice(index, 1)
+  saveColorPresetsToStorage()
+}
+
+// Validation functions
+function isDuplicateValue(variantIndex: number, valueIndex: number): boolean {
+  const variant = form.variants[variantIndex]
+  const currentValue = variant.values[valueIndex].value.trim().toLowerCase()
+  
+  if (!currentValue) return false
+  
+  // Check if same value exists in another position within this variant
+  return variant.values.some((val, idx) => 
+    idx !== valueIndex && val.value.trim().toLowerCase() === currentValue
+  )
+}
+
+function isDuplicateColor(variantIndex: number, valueIndex: number): boolean {
+  const variant = form.variants[variantIndex]
+  if (!variant.isColor) return false
+  
+  const currentColor = variant.values[valueIndex].colorHex?.toLowerCase()
+  if (!currentColor) return false
+  
+  // Check if same color exists in another position within this variant
+  return variant.values.some((val, idx) => 
+    idx !== valueIndex && val.colorHex?.toLowerCase() === currentColor
+  )
+}
+
+const hasValidationErrors = computed(() => {
+  for (let vIndex = 0; vIndex < form.variants.length; vIndex++) {
+    const variant = form.variants[vIndex]
+    for (let valIndex = 0; valIndex < variant.values.length; valIndex++) {
+      if (isDuplicateValue(vIndex, valIndex)) return true
+      if (variant.isColor && isDuplicateColor(vIndex, valIndex)) return true
+    }
+  }
+  return false
 })
 
 const filteredProducts = computed(() => {
@@ -476,7 +823,11 @@ function getProductImages(product: Product): FormImage[] {
       const position = typeof img === 'object' && 'positionX' in img 
         ? { x: (img as { positionX?: number }).positionX || 50, y: (img as { positionY?: number }).positionY || 50 }
         : { x: 50, y: 50 }
-      return { url, position }
+      // Load linked variants
+      const linkedVariants = typeof img === 'object' && 'linkedVariants' in img
+        ? (img as { linkedVariants?: LinkedVariant[] }).linkedVariants || []
+        : []
+      return { url, position, linkedVariants }
     })
   }
   return []
@@ -590,7 +941,7 @@ async function uploadFiles(files: File[]) {
   try {
     for (const file of files) {
       const url = await productsStore.uploadImage(file)
-      form.images.push({ url, position: { x: 50, y: 50 } })
+      form.images.push({ url, position: { x: 50, y: 50 }, linkedVariants: [] })
     }
     showToast(t('admin.imagesUploaded'), 'success')
   } catch (error) {
@@ -661,11 +1012,45 @@ function resetPosition() {
   form.images[positionEditorIndex.value].position = { x: 50, y: 50 }
 }
 
+// Variant Linker functions
+function openVariantLinker(imageIndex: number) {
+  variantLinkerIndex.value = imageIndex
+}
+
+function closeVariantLinker() {
+  variantLinkerIndex.value = null
+}
+
+function isVariantLinked(imageIndex: number, variantType: string, variantValue: string): boolean {
+  const image = form.images[imageIndex]
+  return image.linkedVariants.some(lv => lv.type === variantType && lv.value === variantValue)
+}
+
+function toggleVariantLink(imageIndex: number, variantType: string, variantValue: string) {
+  const image = form.images[imageIndex]
+  const existingIndex = image.linkedVariants.findIndex(lv => lv.type === variantType && lv.value === variantValue)
+  
+  if (existingIndex >= 0) {
+    image.linkedVariants.splice(existingIndex, 1)
+  } else {
+    image.linkedVariants.push({ type: variantType, value: variantValue })
+  }
+}
+
+function clearVariantLinks(imageIndex: number) {
+  form.images[imageIndex].linkedVariants = []
+}
+
+function getLinkedVariantsTitle(image: FormImage): string {
+  if (image.linkedVariants.length === 0) return ''
+  return image.linkedVariants.map(lv => `${lv.type}: ${lv.value}`).join(', ')
+}
+
 function addVariant() {
   form.variants.push({
     name: '',
     isColor: false,
-    values: [{ value: '', colorHex: '', priceModifier: 0 }]
+    values: [{ value: '', colorHex: '#000000', priceModifier: 0 }]
   })
 }
 
@@ -674,7 +1059,12 @@ function removeVariant(index: number) {
 }
 
 function addVariantValue(variantIndex: number) {
-  form.variants[variantIndex].values.push({ value: '', colorHex: '', priceModifier: 0 })
+  const isColor = form.variants[variantIndex].isColor
+  form.variants[variantIndex].values.push({ 
+    value: '', 
+    colorHex: isColor ? '#000000' : '', 
+    priceModifier: 0 
+  })
 }
 
 function removeVariantValue(variantIndex: number, valueIndex: number) {
@@ -692,12 +1082,18 @@ async function saveProduct() {
       reorderedImages.unshift(mainImage)
     }
     
-    // Convert FormImage[] to saveable format with position data
-    const imagesToSave: ProductImage[] = reorderedImages.map(img => ({
-      url: img.url,
-      positionX: img.position.x,
-      positionY: img.position.y
-    }))
+    // Convert FormImage[] to saveable format with position data and linked variants
+    const imagesToSave: ProductImage[] = reorderedImages.map(img => {
+      const imageData: ProductImage = {
+        url: img.url,
+        positionX: img.position.x,
+        positionY: img.position.y
+      }
+      if (img.linkedVariants && img.linkedVariants.length > 0) {
+        imageData.linkedVariants = img.linkedVariants
+      }
+      return imageData
+    })
     
     const productData = {
       name: form.name,
@@ -1262,6 +1658,128 @@ async function deleteProduct() {
   border-top: 1px solid var(--border-color);
 }
 
+/* Variant Linker */
+.variant-linker {
+  background: rgba(13, 18, 32, 0.98);
+  border-radius: 16px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.variant-linker-content {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.linker-image-preview {
+  width: 120px;
+  height: 160px;
+  margin: 0 auto 1.5rem;
+  border-radius: 8px;
+  overflow: hidden;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.no-variants-message {
+  text-align: center;
+  color: var(--muted-color);
+  padding: 2rem;
+}
+
+.variant-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.linker-variant-group {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.linker-variant-name {
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--primary-color);
+}
+
+.linker-variant-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.linker-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  input {
+    display: none;
+  }
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  &.checked {
+    background: rgba(var(--primary-rgb), 0.2);
+    border-color: var(--primary-color);
+  }
+  
+  .color-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .value-label {
+    font-size: 0.875rem;
+  }
+}
+
+.linked-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: var(--primary-color);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  
+  i {
+    font-size: 0.6rem;
+  }
+}
+
+.link-variant-btn.active {
+  background: var(--primary-color);
+  color: white;
+}
+
 /* Variants */
 .variants-list {
   display: flex;
@@ -1317,11 +1835,81 @@ async function deleteProduct() {
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
+  
+  &.has-error {
+    animation: shake 0.3s ease-in-out;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.value-input-wrapper,
+.hex-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.value-input-wrapper {
+  flex: 1;
+  min-width: 120px;
 }
 
 .value-input {
   flex: 1;
   min-width: 120px;
+  
+  &.input-error {
+    border-color: #ef4444 !important;
+    background: rgba(239, 68, 68, 0.1);
+    
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+    }
+  }
+}
+
+.hex-input {
+  &.input-error {
+    border-color: #ef4444 !important;
+    background: rgba(239, 68, 68, 0.1);
+  }
+}
+
+.error-tooltip {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #ef4444;
+  font-size: 0.7rem;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  
+  i {
+    font-size: 0.8rem;
+  }
+}
+
+.validation-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #fbbf24;
+  font-size: 0.875rem;
+  margin-right: auto;
+  
+  i {
+    font-size: 1rem;
+  }
 }
 
 .color-picker-wrapper {
@@ -1352,6 +1940,251 @@ async function deleteProduct() {
   width: 90px;
   font-family: monospace;
   font-size: 0.875rem;
+}
+
+/* Color Preset Dropdown */
+.color-preset-dropdown {
+  position: relative;
+}
+
+.color-preview-btn {
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+  }
+}
+
+.color-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  background: rgba(13, 18, 32, 0.98);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.75rem;
+  z-index: 100;
+  min-width: 220px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.color-dropdown-section {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  
+  &:last-of-type {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+}
+
+.dropdown-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--muted-color);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.5px;
+}
+
+.color-input-large {
+  width: 100%;
+  height: 50px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  
+  &::-webkit-color-swatch-wrapper {
+    padding: 4px;
+  }
+  
+  &::-webkit-color-swatch {
+    border-radius: 4px;
+    border: none;
+  }
+}
+
+.preset-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.preset-color-btn {
+  width: 32px;
+  height: 32px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  
+  &:hover {
+    transform: scale(1.15);
+    border-color: white;
+    z-index: 1;
+    
+    .preset-tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+  
+  .preset-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    margin-bottom: 4px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    pointer-events: none;
+  }
+}
+
+.save-section {
+  border-bottom: none !important;
+}
+
+.save-preset-btn {
+  width: 100%;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.close-dropdown-btn {
+  width: 100%;
+  padding: 0.5rem;
+  background: var(--primary-color);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  margin-top: 0.75rem;
+  
+  &:hover {
+    background: var(--primary-color-hover);
+  }
+}
+
+/* Preset Preview in Modal */
+.preset-preview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.preset-color-preview {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+/* Manage Presets Modal */
+.manage-presets-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 56px;
+  height: 56px;
+  background: var(--primary-color);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 1.25rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  z-index: 500;
+  
+  span {
+    font-size: 0.65rem;
+    font-weight: 600;
+  }
+  
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+  }
+}
+
+.manage-presets-modal .modal-body {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.empty-presets {
+  text-align: center;
+  padding: 2rem;
+  color: var(--muted-color);
+}
+
+.presets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.preset-list-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  
+  .preset-color-preview {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .preset-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .preset-name {
+    font-weight: 500;
+  }
+  
+  .preset-hex {
+    font-size: 0.75rem;
+    font-family: monospace;
+    color: var(--muted-color);
+  }
 }
 
 .price-modifier-wrapper {
