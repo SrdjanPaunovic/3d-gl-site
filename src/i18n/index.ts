@@ -124,7 +124,8 @@ const translations: Record<string, Translations> = {
       confirmDelete: 'Potvrdi brisanje',
       deleteProductConfirm: 'Da li ste sigurni da želite da obrišete proizvod "{name}"?',
       uploading: 'Otpremanje',
-      edit: 'Izmeni'
+      edit: 'Izmeni',
+      duplicate: 'Dupliraj'
     },
     product: {
       name: 'Naziv',
@@ -271,7 +272,8 @@ const translations: Record<string, Translations> = {
       confirmDelete: 'Confirm delete',
       deleteProductConfirm: 'Are you sure you want to delete "{name}"?',
       uploading: 'Uploading',
-      edit: 'Edit'
+      edit: 'Edit',
+      duplicate: 'Duplicate'
     },
     product: {
       name: 'Name',

@@ -26,6 +26,9 @@
             <button class="btn btn-icon" @click="openProductModal(product)" :title="t('admin.edit')">
               <i class="fas fa-edit"></i>
             </button>
+            <button class="btn btn-icon" @click="duplicateProduct(product)" :title="t('admin.duplicate')">
+              <i class="fas fa-copy"></i>
+            </button>
             <button class="btn btn-icon btn-danger" @click="confirmDelete(product)" :title="t('admin.delete')">
               <i class="fas fa-trash"></i>
             </button>
@@ -142,12 +145,108 @@
             </div>
             
             <div class="image-preview-grid" v-if="form.images.length">
-              <div v-for="(image, index) in form.images" :key="index" class="image-preview">
-                <img :src="image" alt="Product image">
+              <div 
+                v-for="(image, index) in form.images" 
+                :key="image.url" 
+                class="image-preview"
+                :class="{ 'is-main': index === mainImageIndex }"
+              >
+                <img 
+                  :src="image.url" 
+                  alt="Product image"
+                  :style="{ objectPosition: `${image.position.x}% ${image.position.y}%` }"
+                >
+                
+                <!-- Image controls -->
+                <div class="image-controls">
+                  <button 
+                    type="button" 
+                    class="control-btn move-left" 
+                    @click="moveImage(index, -1)"
+                    :disabled="index === 0"
+                    title="Move left"
+                  >
+                    <i class="fas fa-chevron-left"></i>
+                  </button>
+                  <button 
+                    type="button" 
+                    class="control-btn set-main" 
+                    @click="setMainImage(index)"
+                    :class="{ active: index === mainImageIndex }"
+                    title="Set as main"
+                  >
+                    <i class="fas fa-star"></i>
+                  </button>
+                  <button 
+                    type="button" 
+                    class="control-btn position-btn" 
+                    @click="openPositionEditor(index)"
+                    title="Adjust crop position"
+                  >
+                    <i class="fas fa-crop-alt"></i>
+                  </button>
+                  <button 
+                    type="button" 
+                    class="control-btn move-right" 
+                    @click="moveImage(index, 1)"
+                    :disabled="index === form.images.length - 1"
+                    title="Move right"
+                  >
+                    <i class="fas fa-chevron-right"></i>
+                  </button>
+                </div>
+                
                 <button type="button" class="remove-image" @click="removeImage(index)">
                   <i class="fas fa-times"></i>
                 </button>
-                <span v-if="index === 0" class="main-badge">Main</span>
+                <span v-if="index === mainImageIndex" class="main-badge">Main</span>
+              </div>
+            </div>
+            
+            <!-- Position Editor Modal -->
+            <div v-if="positionEditorIndex !== null" class="position-editor-overlay" @click.self="closePositionEditor">
+              <div class="position-editor">
+                <div class="position-editor-header">
+                  <h4>Adjust Crop Position</h4>
+                  <button type="button" class="btn-close" @click="closePositionEditor">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+                <p class="position-editor-hint">Click on the image to set the focal point for cropping</p>
+                <div class="position-editor-container">
+                  <div class="position-editor-original">
+                    <span class="label">Original</span>
+                    <img 
+                      ref="positionEditorImage"
+                      :src="form.images[positionEditorIndex].url" 
+                      alt="Position editor"
+                      @click="handlePositionClick"
+                    >
+                    <div 
+                      class="focal-point"
+                      :style="{
+                        left: form.images[positionEditorIndex].position.x + '%',
+                        top: form.images[positionEditorIndex].position.y + '%'
+                      }"
+                    ></div>
+                  </div>
+                  <div class="position-editor-preview">
+                    <span class="label">Preview (1:1)</span>
+                    <div class="preview-frame">
+                      <img 
+                        :src="form.images[positionEditorIndex].url" 
+                        alt="Preview"
+                        :style="{
+                          objectPosition: `${form.images[positionEditorIndex].position.x}% ${form.images[positionEditorIndex].position.y}%`
+                        }"
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div class="position-editor-actions">
+                  <button type="button" class="btn btn-secondary" @click="resetPosition">Reset to Center</button>
+                  <button type="button" class="btn btn-primary" @click="closePositionEditor">Done</button>
+                </div>
               </div>
             </div>
             
@@ -286,7 +385,17 @@ import { useProductsStore } from '@/stores/products'
 import { useI18n } from '@/i18n'
 import { formatPrice } from '@/utils/format'
 import { useToast } from '@/composables/useToast'
-import type { Product, VariantValue } from '@/types'
+import type { Product, VariantValue, ProductImage } from '@/types'
+
+interface ImagePosition {
+  x: number  // 0-100 percentage
+  y: number  // 0-100 percentage
+}
+
+interface FormImage {
+  url: string
+  position: ImagePosition
+}
 
 interface ProductForm {
   name: string
@@ -296,7 +405,7 @@ interface ProductForm {
   price: number
   stock: number
   featured: boolean
-  images: string[]
+  images: FormImage[]
   variants: FormVariant[]
 }
 
@@ -319,6 +428,9 @@ const saving = ref(false)
 const deleting = ref(false)
 const uploadingImages = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
+const mainImageIndex = ref(0)
+const positionEditorIndex = ref<number | null>(null)
+const positionEditorImage = ref<HTMLImageElement | null>(null)
 
 const defaultForm = (): ProductForm => ({
   name: '',
@@ -355,10 +467,17 @@ function getFirstImageUrl(product: Product): string {
   return typeof firstImage === 'string' ? firstImage : firstImage.url
 }
 
-function getProductImages(product: Product): string[] {
+function getProductImages(product: Product): FormImage[] {
   if (!product.images) return []
   if (Array.isArray(product.images)) {
-    return product.images.map(img => typeof img === 'string' ? img : img.url)
+    return product.images.map(img => {
+      const url = typeof img === 'string' ? img : img.url
+      // Check if position data exists (stored as positionX, positionY in Firestore)
+      const position = typeof img === 'object' && 'positionX' in img 
+        ? { x: (img as { positionX?: number }).positionX || 50, y: (img as { positionY?: number }).positionY || 50 }
+        : { x: 50, y: 50 }
+      return { url, position }
+    })
   }
   return []
 }
@@ -415,9 +534,11 @@ function openProductModal(product?: Product) {
       images: getProductImages(product),
       variants: getProductVariants(product)
     })
+    mainImageIndex.value = 0
   } else {
     editingProduct.value = null
     Object.assign(form, defaultForm())
+    mainImageIndex.value = 0
   }
   activeTab.value = 'basic'
   showModal.value = true
@@ -426,6 +547,25 @@ function openProductModal(product?: Product) {
 function closeModal() {
   showModal.value = false
   editingProduct.value = null
+}
+
+function duplicateProduct(product: Product) {
+  // Create a copy without editingProduct so it creates a new product
+  editingProduct.value = null
+  Object.assign(form, {
+    name: `${product.name} (Copy)`,
+    nameEn: product.nameEn ? `${product.nameEn} (Copy)` : '',
+    description: product.description || '',
+    descriptionEn: product.descriptionEn || '',
+    price: product.price,
+    stock: product.stock || 0,
+    featured: false,
+    images: getProductImages(product),
+    variants: getProductVariants(product)
+  })
+  mainImageIndex.value = 0
+  activeTab.value = 'basic'
+  showModal.value = true
 }
 
 function triggerFileInput() {
@@ -450,7 +590,7 @@ async function uploadFiles(files: File[]) {
   try {
     for (const file of files) {
       const url = await productsStore.uploadImage(file)
-      form.images.push(url)
+      form.images.push({ url, position: { x: 50, y: 50 } })
     }
     showToast(t('admin.imagesUploaded'), 'success')
   } catch (error) {
@@ -462,6 +602,63 @@ async function uploadFiles(files: File[]) {
 
 function removeImage(index: number) {
   form.images.splice(index, 1)
+  // Adjust main image index if needed
+  if (mainImageIndex.value >= form.images.length) {
+    mainImageIndex.value = Math.max(0, form.images.length - 1)
+  } else if (index < mainImageIndex.value) {
+    mainImageIndex.value--
+  } else if (index === mainImageIndex.value && form.images.length > 0) {
+    mainImageIndex.value = 0
+  }
+}
+
+function setMainImage(index: number) {
+  mainImageIndex.value = index
+}
+
+function moveImage(index: number, direction: number) {
+  const newIndex = index + direction
+  if (newIndex < 0 || newIndex >= form.images.length) return
+  
+  // Swap images
+  const temp = form.images[index]
+  form.images[index] = form.images[newIndex]
+  form.images[newIndex] = temp
+  
+  // Update main image index if it was moved
+  if (mainImageIndex.value === index) {
+    mainImageIndex.value = newIndex
+  } else if (mainImageIndex.value === newIndex) {
+    mainImageIndex.value = index
+  }
+}
+
+function openPositionEditor(index: number) {
+  positionEditorIndex.value = index
+}
+
+function closePositionEditor() {
+  positionEditorIndex.value = null
+}
+
+function handlePositionClick(event: MouseEvent) {
+  if (positionEditorIndex.value === null) return
+  
+  const img = event.target as HTMLImageElement
+  const rect = img.getBoundingClientRect()
+  
+  const x = Math.round(((event.clientX - rect.left) / rect.width) * 100)
+  const y = Math.round(((event.clientY - rect.top) / rect.height) * 100)
+  
+  form.images[positionEditorIndex.value].position = {
+    x: Math.max(0, Math.min(100, x)),
+    y: Math.max(0, Math.min(100, y))
+  }
+}
+
+function resetPosition() {
+  if (positionEditorIndex.value === null) return
+  form.images[positionEditorIndex.value].position = { x: 50, y: 50 }
 }
 
 function addVariant() {
@@ -488,7 +685,21 @@ async function saveProduct() {
   saving.value = true
   
   try {
-    const productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'> = {
+    // Reorder images so main image is first
+    const reorderedImages = [...form.images]
+    if (mainImageIndex.value > 0 && mainImageIndex.value < reorderedImages.length) {
+      const mainImage = reorderedImages.splice(mainImageIndex.value, 1)[0]
+      reorderedImages.unshift(mainImage)
+    }
+    
+    // Convert FormImage[] to saveable format with position data
+    const imagesToSave: ProductImage[] = reorderedImages.map(img => ({
+      url: img.url,
+      positionX: img.position.x,
+      positionY: img.position.y
+    }))
+    
+    const productData = {
       name: form.name,
       nameEn: form.nameEn,
       description: form.description,
@@ -496,16 +707,22 @@ async function saveProduct() {
       price: form.price,
       stock: form.stock,
       featured: form.featured,
-      image: form.images.length > 0 ? form.images[0] : '',
-      images: form.images,
+      image: imagesToSave.length > 0 ? imagesToSave[0].url : '',
+      images: imagesToSave,
       variants: form.variants.filter(v => v.name && v.values.length).map(v => ({
         name: v.name,
         isColor: v.isColor,
-        values: v.values.filter(val => val.value).map(val => ({
-          value: val.value,
-          colorHex: v.isColor ? val.colorHex : undefined,
-          priceModifier: val.priceModifier || 0
-        }))
+        values: v.values.filter(val => val.value).map(val => {
+          const variantValue: { value: string; priceModifier: number; colorHex?: string } = {
+            value: val.value,
+            priceModifier: val.priceModifier || 0
+          }
+          // Only include colorHex if it's a color variant and has a value
+          if (v.isColor && val.colorHex) {
+            variantValue.colorHex = val.colorHex
+          }
+          return variantValue
+        })
       }))
     }
     
@@ -519,6 +736,7 @@ async function saveProduct() {
     
     closeModal()
   } catch (error) {
+    console.error('Error saving product:', error)
     showToast(t('admin.saveError'), 'error')
   } finally {
     saving.value = false
@@ -598,7 +816,7 @@ async function deleteProduct() {
 
 .product-image {
   position: relative;
-  aspect-ratio: 1;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
   
   img {
@@ -806,7 +1024,7 @@ async function deleteProduct() {
 
 .image-preview {
   position: relative;
-  aspect-ratio: 1;
+  aspect-ratio: 3 / 4;
   border-radius: 8px;
   overflow: hidden;
   
@@ -835,7 +1053,7 @@ async function deleteProduct() {
   
   .main-badge {
     position: absolute;
-    bottom: 0.5rem;
+    top: 0.5rem;
     left: 0.5rem;
     background: var(--primary-color);
     color: white;
@@ -844,6 +1062,60 @@ async function deleteProduct() {
     font-size: 0.625rem;
     font-weight: 600;
     text-transform: uppercase;
+  }
+  
+  .image-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  
+  &:hover .image-controls {
+    opacity: 1;
+  }
+  
+  .control-btn {
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    transition: all 0.2s ease;
+    
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    
+    &.set-main {
+      color: rgba(255, 255, 255, 0.6);
+      
+      &.active, &:hover:not(:disabled) {
+        color: #fbbf24;
+      }
+    }
+  }
+  
+  &.is-main {
+    box-shadow: 0 0 0 3px var(--primary-color);
   }
 }
 
@@ -854,6 +1126,140 @@ async function deleteProduct() {
   gap: 0.75rem;
   padding: 1.5rem;
   color: var(--muted-color);
+}
+
+/* Position Editor */
+.position-editor-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+
+.position-editor {
+  background: rgba(13, 18, 32, 0.98);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.position-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  
+  h4 {
+    margin: 0;
+    font-size: 1.125rem;
+  }
+  
+  .btn-close {
+    background: transparent;
+    border: none;
+    color: var(--muted-color);
+    cursor: pointer;
+    padding: 0.5rem;
+    font-size: 1rem;
+    
+    &:hover {
+      color: var(--text-color);
+    }
+  }
+}
+
+.position-editor-hint {
+  padding: 0.75rem 1.5rem;
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted-color);
+  background: rgba(78, 141, 245, 0.1);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.position-editor-container {
+  display: grid;
+  grid-template-columns: 1fr 200px;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  overflow-y: auto;
+  
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.position-editor-original {
+  position: relative;
+  
+  .label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--muted-color);
+    margin-bottom: 0.5rem;
+  }
+  
+  img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    cursor: crosshair;
+  }
+  
+  .focal-point {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 3px solid white;
+    border-radius: 50%;
+    background: rgba(78, 141, 245, 0.5);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+}
+
+.position-editor-preview {
+  .label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--muted-color);
+    margin-bottom: 0.5rem;
+  }
+  
+  .preview-frame {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.3);
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+}
+
+.position-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--border-color);
 }
 
 /* Variants */

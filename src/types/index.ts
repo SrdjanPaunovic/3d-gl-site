@@ -17,8 +17,10 @@ export interface ProductVariants {
 
 export interface ProductImage {
   url: string
-  isMain: boolean
-  linkedVariants: Array<{ type: string; value: string }>
+  isMain?: boolean
+  positionX?: number
+  positionY?: number
+  linkedVariants?: Array<{ type: string; value: string }>
 }
 
 export interface Product {

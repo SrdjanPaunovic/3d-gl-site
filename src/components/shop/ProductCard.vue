@@ -5,6 +5,7 @@
         :src="currentImage" 
         :alt="product.name" 
         class="product-image" 
+        :style="{ objectPosition: currentImagePosition }"
         loading="lazy"
       >
       <div v-if="product.images?.length > 1" class="product-thumbnails">
@@ -15,7 +16,12 @@
           :class="{ active: currentImageIndex === index }"
           @click="currentImageIndex = index"
         >
-          <img :src="getImageUrl(img)" :alt="`Thumbnail ${index + 1}`" loading="lazy">
+          <img 
+            :src="getImageUrl(img)" 
+            :alt="`Thumbnail ${index + 1}`" 
+            :style="{ objectPosition: getImagePosition(img) }"
+            loading="lazy"
+          >
         </button>
       </div>
     </div>
@@ -160,12 +166,28 @@ function getImageUrl(img: string | { url: string }): string {
   return typeof img === 'string' ? img : img.url
 }
 
+// Helper to get image position for cropping
+function getImagePosition(img: string | ProductImage | { positionX?: number; positionY?: number }): string {
+  if (typeof img === 'string') return '50% 50%'
+  const x = 'positionX' in img ? (img.positionX ?? 50) : 50
+  const y = 'positionY' in img ? (img.positionY ?? 50) : 50
+  return `${x}% ${y}%`
+}
+
 const currentImage = computed(() => {
   const images = props.product.images
   if (images?.length > 0) {
     return getImageUrl(images[currentImageIndex.value]) || getImageUrl(images[0])
   }
   return props.product.image || 'https://via.placeholder.com/300x300?text=No+Image'
+})
+
+const currentImagePosition = computed(() => {
+  const images = props.product.images
+  if (images?.length > 0) {
+    return getImagePosition(images[currentImageIndex.value])
+  }
+  return '50% 50%'
 })
 
 const displayPrice = computed(() => {
@@ -252,7 +274,7 @@ function handleAddToCart(): void {
 .product-image-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 1;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
   background: rgba(0, 0, 0, 0.2);
 }
