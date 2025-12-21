@@ -182,8 +182,12 @@
             <span v-else>{{ formatPrice(summary.shipping) }}</span>
           </div>
           <div v-if="summary.amountToFreeShipping > 0" class="free-shipping-hint">
+            <i class="fas fa-truck"></i>
+            Još {{ formatPrice(summary.amountToFreeShipping) }} do besplatne dostave!
+          </div>
+          <div class="shipping-note">
             <i class="fas fa-info-circle"></i>
-            Još {{ formatPrice(summary.amountToFreeShipping) }} do besplatne dostave
+            Cena može varirati u zavisnosti od kurira
           </div>
           <div class="order-summary-divider"></div>
           <div class="order-total">
@@ -597,14 +601,25 @@ async function submitOrder() {
 
 .free-shipping-hint {
   font-size: 0.8rem;
-  color: var(--primary-color);
-  background: rgba(78, 141, 245, 0.1);
+  color: var(--success-color, #22c55e);
+  background: rgba(34, 197, 94, 0.1);
   padding: 0.5rem 0.75rem;
   border-radius: 6px;
   margin-bottom: 0.5rem;
   
   i {
     margin-right: 0.4rem;
+  }
+}
+
+.shipping-note {
+  font-size: 0.75rem;
+  color: var(--muted-color);
+  font-style: italic;
+  margin-bottom: 0.5rem;
+  
+  i {
+    margin-right: 0.3rem;
   }
 }
 

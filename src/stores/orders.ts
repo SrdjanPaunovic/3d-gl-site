@@ -73,7 +73,7 @@ export const useOrdersStore = defineStore('orders', () => {
       image: item.image,
       variants: item.variants
     }))
-    
+
     const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
     
     const docRef = await addDoc(ordersCollection, {
@@ -105,7 +105,6 @@ export const useOrdersStore = defineStore('orders', () => {
       })),
       total,
       shipping,
-      tax: 0,
       notes: customer.notes
     }
 
